@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, ArrowRight, Briefcase } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Briefcase, Loader2 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const Signup = () => {
@@ -12,15 +12,23 @@ const Signup = () => {
         password: '',
         role: 'user'
     });
+    const [loading, setLoading] = useState(false);
     const { register, googleLogin } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await register(formData);
-        if (success) {
-            navigate('/verify-email', { state: { email: formData.email } });
+        setLoading(true);
+        try {
+            const success = await register(formData);
+            if (success) {
+                navigate('/verify-email', { state: { email: formData.email } });
+            } else {
+                setLoading(false);
+            }
+        } catch (error) {
+            setLoading(false);
         }
     };
 
@@ -116,10 +124,20 @@ const Signup = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-primary hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2 mt-6"
+                        disabled={loading}
+                        className={`w-full bg-primary hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2 mt-6 ${loading ? 'opacity-75 cursor-not-allowed hover:scale-100' : ''}`}
                     >
-                        <span>Create Account</span>
-                        <ArrowRight className="h-5 w-5" />
+                        {loading ? (
+                            <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>Creating Account...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>Create Account</span>
+                                <ArrowRight className="h-5 w-5" />
+                            </>
+                        )}
                     </button>
                 </form>
 
