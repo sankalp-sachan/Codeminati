@@ -69,7 +69,7 @@ const JudgeLeaderboard = () => {
         fetchLeaderboard();
 
         // Socket Connection
-        const newSocket = io('http://localhost:5000');
+        const newSocket = io('https://codeminati-backend.onrender.com/');
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
