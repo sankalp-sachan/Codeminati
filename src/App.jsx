@@ -23,6 +23,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Compiler from './pages/Compiler';
 import Contests from './pages/Contests';
 import ContestDetail from './pages/ContestDetail';
+import ContestProblem from './pages/ContestProblem';
 import Support from './pages/Support';
 import JudgeLeaderboard from './pages/JudgeLeaderboard';
 import Submissions from './pages/Submissions';
@@ -70,10 +71,12 @@ function AppContent() {
 
   // Anti-Cheat & Security Logic
   // Applied only to regular users when they are solving a problem in a contest
+  // Anti-Cheat & Security Logic
+  // Only apply to actual sensitive areas (problems, contests, compiler)
   const isSensitivePath = () => {
-    return user?.role === 'user' &&
-      (location.pathname.startsWith('/problems/') || location.pathname === '/compiler') &&
-      location.state?.contestId;
+    return location.pathname.startsWith('/problems/') ||
+      location.pathname === '/compiler' ||
+      location.pathname.includes('/contests/');
   };
 
   const isSensitivePage = isSensitivePath();
@@ -97,7 +100,8 @@ function AppContent() {
     };
 
     const handleCopyCut = (e) => block(e, 'Copy/Cut is strictly disabled! 🚫');
-    const handlePaste = (e) => block(e, 'Pasting is strictly disabled! 🚫');
+
+
     const handleContext = (e) => block(e, 'Right-click is disabled! 🚫');
     const handleDrop = (e) => block(e, 'Drag & Drop is disabled! 🚫');
 
@@ -110,7 +114,7 @@ function AppContent() {
         return block(e, 'Screenshots and capture shortcuts are disabled! 🚫');
       }
 
-      if (ctrl && ['c', 'v', 'x', 'a', 'p', 's', 'u'].includes(key)) {
+      if (ctrl && ['c', 'x', 'a', 'p', 's', 'u'].includes(key)) {
         return block(e, 'Keyboard shortcuts are disabled! 🚫');
       }
 
@@ -128,16 +132,10 @@ function AppContent() {
         return block(e, 'Developer tools are disabled! 🚫');
       }
 
-      if ((shift && key === 'insert') || (ctrl && key === 'insert')) {
-        return block(e, 'Alternative shortcuts are disabled! 🚫');
-      }
+
     };
 
-    const handleBeforeInput = (e) => {
-      if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop') {
-        return block(e, 'Pasting is disabled! 🚫');
-      }
-    };
+
 
     const secureWriteText = navigator.clipboard && navigator.clipboard.writeText
       ? navigator.clipboard.writeText.bind(navigator.clipboard)
@@ -162,30 +160,7 @@ function AppContent() {
       } catch (e) { }
     };
 
-    const handleVisibility = () => {
-      if (document.hidden) {
-        setIsBlocked(true);
-        toast.error('Tab switching detected! ⚠️', { id: 'anti-cheat-tab', duration: 3000 });
-        reportActivity('tab_switch', 'User switched tab or minimized browser');
-      } else {
-        setIsBlocked(false);
-      }
-    };
 
-    const handleBlur = () => {
-      if (isSensitivePage) {
-        setIsBlocked(true);
-        toast.error('Security Lockdown: Content Hidden! 🚫', { id: 'anti-cheat-focus', duration: 3000 });
-        reportActivity('window_blur', 'User lost focus of the window (clicked outside or alt-tab)');
-        if (secureWriteText) {
-          secureWriteText('Security Lockdown Active 🚫').catch(() => { });
-        }
-      }
-    };
-
-    const handleFocus = () => {
-      setIsBlocked(false);
-    };
 
     const handleSelection = () => {
       if (window.getSelection().toString().length > 0) {
@@ -193,28 +168,17 @@ function AppContent() {
       }
     };
 
-    const originalClipboard = { ...navigator.clipboard };
-    try {
-      Object.assign(navigator.clipboard, {
-        read: () => Promise.reject('Access Denied 🚫'),
-        readText: () => Promise.reject('Access Denied 🚫'),
-        write: () => Promise.reject('Access Denied 🚫'),
-        writeText: () => Promise.rejecct('Access Denied 🚫')
-      });
-    } catch (e) { }
+
 
     window.addEventListener('copy', handleCopyCut, true);
     window.addEventListener('cut', handleCopyCut, true);
-    window.addEventListener('paste', handlePaste, true);
+
     window.addEventListener('contextmenu', handleContext, true);
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('drop', handleDrop, true);
-    window.addEventListener('dragstart', handleDrop, true);
-    window.addEventListener('beforeinput', handleBeforeInput, true);
+
     window.addEventListener('mousedown', handleFocusActivity, true);
-    window.addEventListener('visibilitychange', handleVisibility, true);
-    window.addEventListener('blur', handleBlur, true);
-    window.addEventListener('focus', handleFocus, true);
+
     document.addEventListener('selectionchange', handleSelection, true);
 
     const wipeInterval = setInterval(handleFocusActivity, 2000);
@@ -222,22 +186,13 @@ function AppContent() {
     return () => {
       window.removeEventListener('copy', handleCopyCut, true);
       window.removeEventListener('cut', handleCopyCut, true);
-      window.removeEventListener('paste', handlePaste, true);
-      window.removeEventListener('contextmenu', handleContext, true);
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('drop', handleDrop, true);
-      window.removeEventListener('dragstart', handleDrop, true);
-      window.removeEventListener('beforeinput', handleBeforeInput, true);
+
       window.removeEventListener('mousedown', handleFocusActivity, true);
-      window.removeEventListener('visibilitychange', handleVisibility, true);
-      window.removeEventListener('blur', handleBlur, true);
-      window.removeEventListener('focus', handleFocus, true);
+
       document.removeEventListener('selectionchange', handleSelection, true);
       clearInterval(wipeInterval);
       setIsBlocked(false);
-      try {
-        Object.assign(navigator.clipboard, originalClipboard);
-      } catch (e) { }
+
     };
   }, [location.pathname, isSensitivePage]);
 
@@ -298,6 +253,7 @@ function AppContent() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/problems/:slug" element={<ProblemDetail />} />
             <Route path="/contests/:id" element={<ContestDetail />} />
+            <Route path="/contests/:id/solve/:slug" element={<ContestProblem />} />
             <Route path="/submissions" element={<Submissions />} />
           </Route>
 

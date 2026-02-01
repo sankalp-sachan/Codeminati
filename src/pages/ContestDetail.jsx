@@ -264,7 +264,7 @@ const ContestDetail = () => {
                                     </span>
                                 ) : (
                                     <Link
-                                        to={`/problems/${problem.slug}`}
+                                        to={`/contests/${id}/solve/${problem.slug}`}
                                         className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition"
                                     >
                                         Solve

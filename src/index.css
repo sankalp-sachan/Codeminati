@@ -26,6 +26,13 @@ body {
     -ms-user-select: none !important;
 }
 
+input, textarea {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+}
+
 /* Allow selection ONLY in code editor if we are not in lockdown mode */
 /* But we will control this via JS for sensitive pages */
 

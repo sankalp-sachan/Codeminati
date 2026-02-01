@@ -36,11 +36,10 @@ const HintAccordion = ({ hint, index }) => {
     );
 };
 
-const ProblemDetail = () => {
-    const { slug } = useParams();
+const ContestProblem = () => {
+    const { id: contestId, slug } = useParams(); // 'id' from route /contests/:id/solve/:slug
     const navigate = useNavigate();
     const location = useLocation();
-    const contestId = location.state?.contestId;
     const { user, updateUser } = useAuth();
 
     const [problem, setProblem] = useState(null);
@@ -53,6 +52,60 @@ const ProblemDetail = () => {
     const [contestEndTime, setContestEndTime] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
     const [isContestEnded, setIsContestEnded] = useState(false);
+
+    // Issue 5: Track Start Time
+    const [startTime, setStartTime] = useState(Date.now());
+
+    // Update startTime when problem/slug changes
+    useEffect(() => {
+        setStartTime(Date.now());
+    }, [slug]);
+
+    // Issue 6: Violation Listeners
+    useEffect(() => {
+        if (!contestId) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) logViolation('tab_switch', 'User switched tab or minimized window');
+        };
+        const handleBlur = () => {
+            logViolation('window_blur', 'Window lost focus');
+        };
+        const handleCopy = () => {
+            logViolation('copy', 'User copied content');
+        };
+        const handlePaste = () => {
+            // logViolation('paste', 'User pasted content'); // Optional, maybe allowed? prompt says "Tab switch / copy paste violation"
+            // Usually paste is allowed in IDEs but for strict contests maybe not?
+            // User Prompt: "Fix frontend listeners: visibilitychange, copy, paste, blur. Send ... /api/violation/log"
+            logViolation('paste', 'User pasted content');
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        document.addEventListener('copy', handleCopy);
+        document.addEventListener('paste', handlePaste);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+            document.removeEventListener('copy', handleCopy);
+            document.removeEventListener('paste', handlePaste);
+        };
+    }, [contestId, slug]);
+
+    const logViolation = async (action, details) => {
+        try {
+            await client.post('/violation/log', {
+                contestId,
+                problemId: problem?._id,
+                action,
+                details
+            });
+        } catch (err) {
+            console.error('Failed to log violation', err);
+        }
+    };
 
     useAntiCheat(contestId, problem?._id, !!contestId && !isContestEnded);
 
@@ -71,10 +124,6 @@ const ProblemDetail = () => {
     const [lastSavedCode, setLastSavedCode] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Discussion State
-
-
-    // Success Modal State
     // Success Modal State
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState(null);
@@ -155,8 +204,6 @@ const ProblemDetail = () => {
         fetchProblemAndProgress();
     }, [slug, user]);
 
-
-
     // Fetch Contest Details for Timer & Navigation
     const [contestProblems, setContestProblems] = useState([]);
 
@@ -181,7 +228,8 @@ const ProblemDetail = () => {
     const nextProblem = currentProblemIndex !== -1 && currentProblemIndex < contestProblems.length - 1 ? contestProblems[currentProblemIndex + 1] : null;
 
     const handleNavigateProblem = (targetSlug) => {
-        navigate(`/problems/${targetSlug}`, { state: { contestId } });
+        // Navigate to the contest problem route
+        navigate(`/contests/${contestId}/solve/${targetSlug}`);
     };
 
     // Timer Logic
@@ -207,6 +255,7 @@ const ProblemDetail = () => {
 
         return () => clearInterval(interval);
     }, [contestEndTime]);
+
     useEffect(() => {
         if (!user || !code || code === lastSavedCode) return;
 
@@ -225,10 +274,6 @@ const ProblemDetail = () => {
 
         return () => clearTimeout(timeoutId);
     }, [code, language, slug, user, lastSavedCode]);
-
-
-
-
 
     const handleLanguageChange = (newLang) => {
         const updatedMap = { ...codeMap, [language]: code };
@@ -255,7 +300,6 @@ const ProblemDetail = () => {
     const handleRun = async () => {
         if (!user) {
             toast.error('Please login to run code');
-            navigate('/login', { state: { from: `/problems/${slug}` } });
             return;
         }
         setLoading(true);
@@ -269,7 +313,8 @@ const ProblemDetail = () => {
                 code,
                 language,
                 mode: 'run',
-                testCases: userTestCases
+                testCases: userTestCases,
+                startTime: startTime // Send start time
             });
 
             setOverallStatus(data.status);
@@ -286,7 +331,6 @@ const ProblemDetail = () => {
     const handleSubmit = async () => {
         if (!user) {
             toast.error('Please login to submit code');
-            navigate('/login', { state: { from: `/problems/${slug}` } });
             return;
         }
         setLoading(true);
@@ -294,7 +338,9 @@ const ProblemDetail = () => {
             const { data } = await client.post(`/problems/${slug}/submit`, {
                 code,
                 language,
-                mode: 'submit'
+                mode: 'submit',
+                contestId,
+                startTime: startTime // Send start time
             });
 
             if (data.status === 'Accepted') {
@@ -326,7 +372,7 @@ const ProblemDetail = () => {
         }
     };
 
-    // Keyboard Shortcuts (Moved here to access handleRun/handleSubmit)
+    // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
             // Run Code: Ctrl + '
@@ -363,8 +409,6 @@ const ProblemDetail = () => {
         updatedCases[activeTestCaseId].input = val;
         setUserTestCases(updatedCases);
     };
-
-
 
     const handleDragStart = (e) => {
         setIsDragging(true);
@@ -461,10 +505,10 @@ const ProblemDetail = () => {
                 <AlertTriangle className="h-16 w-16 text-red-500" />
                 <h2 className="text-2xl font-bold text-white">{error}</h2>
                 <button
-                    onClick={() => navigate('/problems')}
+                    onClick={() => navigate(`/contests/${contestId}`)}
                     className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors text-white"
                 >
-                    Back to Problems
+                    Back to Contest
                 </button>
             </div>
         );
@@ -477,8 +521,6 @@ const ProblemDetail = () => {
             </div>
         );
     }
-
-
 
     const showLeftPanel = fullScreenMode !== 'compiler';
     const showRightPanel = fullScreenMode !== 'description';
@@ -548,11 +590,8 @@ const ProblemDetail = () => {
                                         </div>
                                     )}
                                     <span className="text-white font-bold">{user.username}</span>
-                                    <span className="text-white font-bold">{user.username}</span>
                                     <span className="text-gray-500 text-sm">submitted just now</span>
                                 </div>
-
-
 
                                 <div className="space-y-6">
                                     {/* Runtime Card */}
@@ -660,39 +699,33 @@ const ProblemDetail = () => {
             {/* Top Toolbar */}
             <div className="h-12 border-b border-gray-800 bg-[#1e1e1e] flex items-center justify-between px-4">
                 <div className="flex items-center space-x-4">
-                    {contestId && (
-                        <div className="flex items-center mr-2 border-r border-gray-700 pr-4">
-                            <button
-                                onClick={() => navigate(`/contests/${contestId}`)}
-                                className="text-gray-400 hover:text-white mr-4 flex items-center gap-1 text-sm bg-gray-800/50 hover:bg-gray-800 px-3 py-1 rounded transition-colors"
-                            >
-                                <ChevronLeft className="h-4 w-4" /> Back to Contest
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex items-center mr-2 border-r border-gray-700 pr-4">
+                        <button
+                            onClick={() => navigate(`/contests/${contestId}`)}
+                            className="text-gray-400 hover:text-white mr-4 flex items-center gap-1 text-sm bg-gray-800/50 hover:bg-gray-800 px-3 py-1 rounded transition-colors"
+                        >
+                            <ChevronLeft className="h-4 w-4" /> Back to Contest
+                        </button>
+                    </div>
 
                     {/* Navigation Buttons */}
                     <div className="flex items-center bg-gray-800/50 rounded-lg p-0.5 mr-4 border border-gray-800">
                         <button
-                            onClick={() => (contestId ? prevProblem?.slug : problem.prevSlug) && handleNavigateProblem(contestId ? prevProblem?.slug : problem.prevSlug)}
-                            disabled={!(contestId ? prevProblem : problem.prevSlug)}
+                            onClick={() => prevProblem && handleNavigateProblem(prevProblem.slug)}
+                            disabled={!prevProblem}
                             className="p-1.5 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                             title="Previous Problem"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
 
-                        {contestId ? (
-                            <span className="text-xs text-gray-500 font-mono px-2 select-none">
-                                {currentProblemIndex + 1} / {contestProblems.length}
-                            </span>
-                        ) : (
-                            <div className="w-px h-4 bg-gray-700 mx-1"></div>
-                        )}
+                        <span className="text-xs text-gray-500 font-mono px-2 select-none">
+                            {currentProblemIndex + 1} / {contestProblems.length}
+                        </span>
 
                         <button
-                            onClick={() => (contestId ? nextProblem?.slug : problem.nextSlug) && handleNavigateProblem(contestId ? nextProblem?.slug : problem.nextSlug)}
-                            disabled={!(contestId ? nextProblem : problem.nextSlug)}
+                            onClick={() => nextProblem && handleNavigateProblem(nextProblem.slug)}
+                            disabled={!nextProblem}
                             className="p-1.5 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                             title="Next Problem"
                         >
@@ -707,6 +740,14 @@ const ProblemDetail = () => {
                         }`}>
                         {problem.difficulty}
                     </span>
+
+                    {/* Timer */}
+                    {timeLeft && (
+                        <div className={`px-3 py-0.5 rounded text-xs font-mono font-bold flex items-center gap-2 ${timeLeft === "00:00:00" ? 'text-red-500 bg-red-500/10' : 'text-gray-400 bg-gray-800'}`}>
+                            <Clock className="w-3 h-3" />
+                            {timeLeft}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -747,8 +788,6 @@ const ProblemDetail = () => {
                     >
                         <Play className="h-4 w-4" /> <span>Run</span>
                     </button>
-
-
 
                     <button
                         onClick={handleSubmit}
@@ -799,285 +838,288 @@ const ProblemDetail = () => {
                                             remarkPlugins={[remarkGfm]}
                                             rehypePlugins={[rehypeRaw]}
                                             components={{
-                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-600 pl-4 py-1 my-4 bg-gray-800/50 rounded-r" {...props} />,
-                                                pre: ({ node, ...props }) => <pre className="bg-gray-800/60 border border-gray-700 p-4 rounded-lg overflow-x-auto my-4" {...props} />,
-                                                code: ({ node, inline, className, children, ...props }) => {
+                                                code({ node, inline, className, children, ...props }) {
                                                     return !inline ? (
-                                                        <code className="text-gray-200" {...props}>{children}</code>
+                                                        <div className="bg-gray-800 p-3 rounded-md overflow-x-auto my-4 text-sm font-mono border border-gray-700">
+                                                            {children}
+                                                        </div>
                                                     ) : (
-                                                        <code className="bg-white/10 px-1 py-0.5 rounded text-sm text-blue-300 font-mono" {...props}>{children}</code>
-                                                    )
-                                                }
+                                                        <code className="bg-gray-800 px-1.5 py-0.5 rounded text-red-300 font-mono text-sm" {...props}>
+                                                            {children}
+                                                        </code>
+                                                    );
+                                                },
+                                                img: ({ node, ...props }) => <img className="rounded-lg shadow-lg max-w-full my-4 border border-gray-700" {...props} />,
+                                                h1: ({ node, ...props }) => <h1 className="text-2xl font-bold text-white mb-4 mt-6 border-b border-gray-800 pb-2" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-xl font-bold text-white mb-3 mt-5" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-white mb-2 mt-4" {...props} />,
+                                                p: ({ node, ...props }) => <p className="text-gray-300 mb-4 leading-relaxed" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1" {...props} />,
+                                                li: ({ node, ...props }) => <li className="text-gray-300" {...props} />,
+                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-600 pl-4 py-1 my-4 text-gray-400 italic bg-gray-800/30 rounded-r" {...props} />,
                                             }}
                                         >
-                                            {problem.description
-                                                .replace(/\*Source:.*?\*/g, '')
-                                                .replace(/Input:/g, '\n\n> **Input:**')
-                                                .replace(/Output:/g, '\n>\n> **Output:**')
-                                                .replace(/Explanation:/g, '\n>\n> **Explanation:**')}
+                                            {problem.description}
                                         </ReactMarkdown>
                                     </div>
                                 </div>
 
-                                {problem.hints && problem.hints.length > 0 && (
-                                    <div className="mt-8 space-y-2">
-                                        {problem.hints.map((hint, index) => (
-                                            <HintAccordion key={index} hint={hint} index={index} />
-                                        ))}
+                                {/* Examples */}
+                                {problem.examples && problem.examples.length > 0 && (
+                                    <div className="mb-8">
+                                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                            <Ticket className="w-5 h-5 text-blue-500" /> Examples
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {problem.examples.map((example, i) => (
+                                                <div key={i} className="bg-[#262626] rounded-lg p-4 border border-gray-700/50">
+                                                    <div className="mb-2 text-sm font-medium text-white/80">Example {i + 1}</div>
+                                                    <div className="space-y-2">
+                                                        <div className="text-sm">
+                                                            <span className="text-gray-500 font-mono text-xs uppercase tracking-wide">Input:</span>
+                                                            <div className="bg-[#1e1e1e] p-2 rounded mt-1 font-mono text-gray-300">{example.input}</div>
+                                                        </div>
+                                                        <div className="text-sm">
+                                                            <span className="text-gray-500 font-mono text-xs uppercase tracking-wide">Output:</span>
+                                                            <div className="bg-[#1e1e1e] p-2 rounded mt-1 font-mono text-gray-300">{example.output}</div>
+                                                        </div>
+                                                        {example.explanation && (
+                                                            <div className="text-sm">
+                                                                <span className="text-gray-500 font-mono text-xs uppercase tracking-wide">Explanation:</span>
+                                                                <div className="text-gray-400 mt-1 italic">{example.explanation}</div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Constraints */}
+                                {problem.constraints && problem.constraints.length > 0 && (
+                                    <div className="mb-8">
+                                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                            <AlertTriangle className="w-5 h-5 text-yellow-500" /> Constraints
+                                        </h3>
+                                        <ul className="list-disc list-inside space-y-2 text-gray-300 bg-[#262626] p-4 rounded-lg border border-gray-700/50">
+                                            {problem.constraints.map((constraint, i) => (
+                                                <li key={i} className="font-mono text-sm">{constraint}</li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 )}
                             </>
                         )}
-
-                        {problem.constraints && problem.constraints.length > 0 && (
-                            <div className="mt-8">
-                                <h3 className="text-lg font-bold text-white mb-3 flex items-center">
-                                    <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                                    Constraints
-                                </h3>
-                                <ul className="space-y-2 bg-gray-800/30 p-4 rounded-lg border border-gray-700/50">
-                                    {problem.constraints.map((constraint, index) => (
-                                        <li key={index} className="text-gray-300 font-mono text-sm flex items-start">
-                                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-500 mt-1.5 mr-3 flex-shrink-0"></span>
-                                            {constraint}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-
                     </div>
                 </div>
 
                 {/* Resizer Handle */}
-                {!fullScreenMode && (
-                    <div
-                        className="w-1 hover:bg-blue-500 cursor-col-resize z-10 flex items-center justify-center group bg-[#0f0f15]"
-                        onMouseDown={handleDragStart}
-                    >
-                        <GripVertical className="h-4 w-4 text-gray-600 group-hover:text-white" />
-                    </div>
-                )}
-
-                {/* Editor & Test Panel (Right) */}
                 <div
-                    className={`flex flex-col bg-[#1e1e1e] ${!showRightPanel ? 'hidden' : ''}`}
-                    style={{ width: fullScreenMode ? '100%' : `${100 - leftPanelWidth}%` }}
+                    className={`w-1 hover:bg-blue-600 bg-gray-800 cursor-col-resize flex items-center justify-center transition-colors z-10 ${fullScreenMode ? 'hidden' : ''}`}
+                    onMouseDown={handleDragStart}
                 >
-                    <div className="p-4 border-b border-gray-700 font-medium text-gray-300 flex justify-between items-center bg-[#252526]">
-                        <div className="flex items-center space-x-4">
-                            <span>Code</span>
-                            <span className="text-xs text-blue-400 font-mono border border-blue-500/30 px-2 py-0.5 rounded bg-blue-500/10 uppercase">{language}</span>
+                    <GripVertical className="h-4 w-4 text-gray-600" />
+                </div>
+
+                {/* Right Panel (Compiler & Console) */}
+                <div
+                    className={`flex flex-col flex-1 bg-[#1e1e1e] ${!showRightPanel ? 'hidden' : ''}`}
+                    style={{ width: fullScreenMode === 'compiler' ? '100%' : `${100 - leftPanelWidth}%` }}
+                >
+                    {/* Editor */}
+                    <div className="flex flex-col" style={{ height: `${editorHeight}%` }}>
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-[#1e1e1e]/50">
+                            <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                Code Editor
+                            </span>
+                            <button
+                                onClick={() => toggleFullScreen('compiler')}
+                                className="text-gray-400 hover:text-white p-1"
+                                title={fullScreenMode === 'compiler' ? "Exit Full Screen" : "Full Screen"}
+                            >
+                                {fullScreenMode === 'compiler' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                            </button>
                         </div>
-                        <button
-                            onClick={() => toggleFullScreen('compiler')}
-                            className="text-gray-400 hover:text-white p-1"
-                            title={fullScreenMode === 'compiler' ? "Exit Full Screen" : "Full Screen"}
-                        >
-                            {fullScreenMode === 'compiler' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                        </button>
+                        <div className="flex-1 overflow-hidden relative">
+                            <Editor
+                                height="100%"
+                                language={language === 'c' || language === 'cpp' ? 'cpp' : 'python'}
+                                theme="vs-dark"
+                                value={code}
+                                onChange={(value) => setCode(value || '')}
+                                loading={<Loader />}
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    scrollBeyondLastLine: false,
+                                    fontFamily: "'Fira Code', 'Monaco', monospace",
+                                    automaticLayout: true,
+                                }}
+                            />
+                        </div>
                     </div>
 
+                    {/* Vertical Resizer */}
                     <div
-                        className={`relative border-b border-gray-800 transition-none overflow-hidden`}
-                        style={{ height: isConsoleOpen ? `${editorHeight}%` : 'calc(100% - 40px)' }}
+                        className="h-1 bg-gray-800 hover:bg-blue-600 cursor-row-resize flex justify-center items-center transition-colors z-10"
+                        onMouseDown={handleVerticalDragStart}
                     >
-                        <Editor
-                            height="100%"
-                            language={language}
-                            theme="vs-dark"
-                            value={code}
-                            onChange={setCode}
-                            onMount={(editor, monaco) => {
-                                // Disable Copy/Paste within editor
-                                const container = editor.getContainerDomNode();
-                                container.addEventListener('copy', (e) => e.preventDefault(), true);
-                                container.addEventListener('paste', (e) => e.preventDefault(), true);
-                                container.addEventListener('cut', (e) => e.preventDefault(), true);
-                                container.addEventListener('contextmenu', (e) => e.preventDefault(), true);
-                            }}
-                            options={{
-                                contextmenu: false,
-                                minimap: { enabled: false },
-                                fontSize: 14,
-                                scrollBeyondLastLine: false,
-                                padding: { top: 16 },
-                                fontFamily: "'Fira Code', 'Monaco', monospace",
-                                renderValidationDecorations: "off"
-                            }}
-                        />
+                        <GripHorizontal className="h-4 w-4 text-gray-600" />
                     </div>
 
-                    {/* Vertical Resizer Handle */}
-                    {isConsoleOpen && (
-                        <div
-                            className="h-1 bg-[#1e1e1e] hover:bg-blue-500 cursor-row-resize z-10 flex items-center justify-center group flex-shrink-0"
-                            onMouseDown={handleVerticalDragStart}
-                        >
-                            <GripHorizontal className="w-4 h-4 text-gray-600 group-hover:text-white" />
-                        </div>
-                    )}
-
-                    <div
-                        className={`flex flex-col bg-[#1e1e1e] transition-none`}
-                        style={{ height: isConsoleOpen ? `${100 - editorHeight}%` : '40px' }}
-                    >
-                        <div
-                            className="flex items-center justify-between bg-[#252526] border-b border-gray-700 cursor-pointer h-[40px] flex-shrink-0"
-                            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-                        >
-                            <div className="flex items-center">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsConsoleOpen(true); setActiveBottomTab('testcase'); }}
-                                    className={`px-4 py-2 text-xs font-bold flex items-center space-x-2 ${activeBottomTab === 'testcase' && isConsoleOpen ? 'text-white border-t-2 border-blue-500 bg-[#1e1e1e]' : 'text-gray-400 hover:text-white'}`}
-                                >
-                                    <Check size={14} className="text-green-500" />
-                                    <span>Testcase</span>
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsConsoleOpen(true); setActiveBottomTab('result'); }}
-                                    className={`px-4 py-2 text-xs font-bold flex items-center space-x-2 ${activeBottomTab === 'result' && isConsoleOpen ? 'text-white border-t-2 border-blue-500 bg-[#1e1e1e]' : 'text-gray-400 hover:text-white'}`}
-                                >
-                                    <Play size={14} className="text-blue-500" />
-                                    <span>Test Result</span>
-                                </button>
-                            </div>
-                            <div className="pr-4">
-                                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isConsoleOpen ? '' : 'rotate-180'}`} />
-                            </div>
+                    {/* Console & Test Cases */}
+                    <div className="flex-1 flex flex-col bg-[#1e1e1e] overflow-hidden" style={{ height: `${100 - editorHeight}%` }}>
+                        <div className="flex items-center space-x-1 px-4 border-b border-gray-800 bg-[#1e1e1e]">
+                            <button
+                                onClick={() => setActiveBottomTab('testcase')}
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeBottomTab === 'testcase' ? 'border-white text-white' : 'border-transparent text-gray-400 hover:bg-white/5'
+                                    }`}
+                            >
+                                Test Case
+                            </button>
+                            <button
+                                onClick={() => setActiveBottomTab('result')}
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeBottomTab === 'result' ? 'border-white text-white' : 'border-transparent text-gray-400 hover:bg-white/5'
+                                    }`}
+                            >
+                                Result
+                            </button>
                         </div>
 
-                        {isConsoleOpen && (
-                            <div className="flex-1 p-4 overflow-y-auto bg-[#1e1e1e]">
-                                {activeBottomTab === 'testcase' && (
-                                    <div className="flex flex-col h-full">
-                                        <div className="flex items-center space-x-2 mb-4 overflow-x-auto pb-2">
-                                            {userTestCases.map((tc, index) => (
+                        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-700">
+                            {activeBottomTab === 'testcase' ? (
+                                <div className="space-y-4">
+                                    <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700">
+                                        {userTestCases.map((tc) => (
+                                            <div key={tc.id} className="flex items-center">
                                                 <button
-                                                    key={tc.id}
-                                                    onClick={() => setActiveTestCaseId(index)}
-                                                    className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap flex items-center space-x-2 transition-colors ${activeTestCaseId === index
-                                                        ? 'bg-gray-700 text-white'
-                                                        : 'bg-transparent text-gray-500 hover:bg-gray-800'
+                                                    onClick={() => setActiveTestCaseId(tc.id)}
+                                                    className={`px-3 py-1.5 rounded-l-md text-sm font-medium transition-colors border-y border-l ${activeTestCaseId === tc.id
+                                                        ? 'bg-gray-700 text-white border-gray-600'
+                                                        : 'bg-transparent text-gray-500 border-gray-800 hover:bg-gray-800'
                                                         }`}
                                                 >
-                                                    <span>Case {index + 1}</span>
-                                                    {userTestCases.length > 1 && (
-                                                        <span
-                                                            onClick={(e) => { e.stopPropagation(); handleRemoveTestCase(tc.id); }}
-                                                            className="hover:text-red-400"
-                                                        >
-                                                            <Trash2 size={12} />
-                                                        </span>
-                                                    )}
+                                                    Case {tc.id + 1}
                                                 </button>
-                                            ))}
-                                            <button
-                                                onClick={handleAddTestCase}
-                                                className="px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-800 flex items-center space-x-1"
-                                            >
-                                                <Plus size={12} />
-                                            </button>
-                                        </div>
-
-                                        <div className="flex-1">
-                                            <label className="text-xs text-gray-500 font-mono mb-2 block">Input:</label>
-                                            <div className="relative h-full">
-                                                <textarea
-                                                    value={userTestCases[activeTestCaseId]?.input || ''}
-                                                    onChange={(e) => handleTestCaseChange(e.target.value)}
-                                                    className="w-full h-32 bg-gray-900/50 border border-gray-700 rounded-lg p-3 text-sm font-mono text-gray-300 focus:outline-none focus:border-blue-500 resize-none"
-                                                />
+                                                <button
+                                                    onClick={() => handleRemoveTestCase(tc.id)}
+                                                    className={`px-2 py-1.5 rounded-r-md text-sm transition-colors border-y border-r border-l-0 ${activeTestCaseId === tc.id
+                                                        ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                                                        : 'bg-transparent text-gray-500 border-gray-800 hover:bg-gray-800'
+                                                        }`}
+                                                    title="Remove Case"
+                                                >
+                                                    ×
+                                                </button>
                                             </div>
-                                        </div>
+                                        ))}
+                                        <button
+                                            onClick={handleAddTestCase}
+                                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-800 text-gray-400 hover:text-white transition-colors flex items-center"
+                                        >
+                                            <Plus className="h-3 w-3 mr-1" /> Add
+                                        </button>
                                     </div>
-                                )}
 
-                                {activeBottomTab === 'result' && (
-                                    <div className="h-full">
-                                        {!testResults && !loading && (
-                                            <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                                                <p>Run your code to see results.</p>
-                                            </div>
-                                        )}
-
-                                        {loading && (
-                                            <div className="h-full flex items-center justify-center text-gray-400 animate-pulse">
-                                                Running Code...
-                                            </div>
-                                        )}
-
-                                        {testResults && (
-                                            <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <div className={`mb-4 text-xl font-bold tracking-tight ${overallStatus === 'Accepted' ? 'text-green-500' :
-                                                    (overallStatus === 'Wrong Answer' || overallStatus === 'Compile Error') ? 'text-red-500' :
-                                                        (overallStatus === 'Time Limit Exceeded' || overallStatus === 'TLE') ? 'text-orange-500' :
-                                                            overallStatus === 'Runtime Error' ? 'text-orange-500' : 'text-yellow-500'
-                                                    }`}>
-                                                    {overallStatus}
-                                                </div>
-
-                                                {/* Case Tabs - Only show if not a system error */}
-                                                {overallStatus !== 'Compile Error' && overallStatus !== 'Runtime Error' && (
-                                                    <div className="flex items-center space-x-2 mb-6 border-b border-gray-800 pb-2">
-                                                        {testResults.map((res, index) => (
-                                                            <button
-                                                                key={index}
-                                                                onClick={() => setActiveTestCaseId(index)}
-                                                                className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center space-x-2 transition-all ${activeTestCaseId === index
-                                                                    ? 'bg-gray-700 text-white'
-                                                                    : 'bg-transparent text-gray-500 hover:bg-gray-800'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-1.5 h-1.5 rounded-full ${res.status === 'Passed' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                                                <span>Case {index + 1}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                <div className="flex-1 space-y-6 font-mono pb-4">
-                                                    <div>
-                                                        <span className="text-gray-500 block mb-2 text-xs font-bold uppercase tracking-wider">Input</span>
-                                                        <div className="bg-[#2d2d2d] p-4 rounded-xl border border-gray-700/50 text-gray-200 text-sm whitespace-pre-wrap leading-relaxed shadow-inner">
-                                                            {testResults[activeTestCaseId]?.input}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Output / Error Section */}
-                                                    <div>
-                                                        <span className={`block mb-2 text-xs font-bold uppercase tracking-wider ${testResults[activeTestCaseId]?.status === 'Passed' ? 'text-gray-500' : 'text-red-400'}`}>
-                                                            {overallStatus === 'Runtime Error' ? 'Error Message' : 'Output'}
-                                                        </span>
-                                                        <div className={`p-4 rounded-xl border text-sm whitespace-pre-wrap leading-relaxed ${overallStatus === 'Runtime Error'
-                                                            ? 'bg-red-500/5 border-red-500/20 text-red-200 font-medium'
-                                                            : 'bg-[#2d2d2d] border-gray-700/50 text-gray-200'
-                                                            }`}>
-                                                            {testResults[activeTestCaseId]?.output || 'No output'}
-                                                        </div>
-                                                    </div>
-
-                                                    {overallStatus !== 'Runtime Error' && overallStatus !== 'Compile Error' && (
-                                                        <div>
-                                                            <span className="text-gray-500 block mb-2 text-xs font-bold uppercase tracking-wider">Expected</span>
-                                                            <div className="bg-[#2d2d2d] p-4 rounded-xl border border-gray-700/50 text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">
-                                                                {testResults[activeTestCaseId]?.expected || 'No expected output'}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
+                                    <div className="bg-[#262626] p-4 rounded-lg border border-gray-700/50">
+                                        <div className="mb-2 text-sm text-gray-400 font-mono">Input:</div>
+                                        <textarea
+                                            value={userTestCases[activeTestCaseId]?.input || ''}
+                                            onChange={(e) => handleTestCaseChange(e.target.value)}
+                                            className="w-full bg-[#1e1e1e] text-white font-mono text-sm p-3 rounded border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all scrollbar-thin scrollbar-thumb-gray-600"
+                                            rows={4}
+                                        />
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {overallStatus && (
+                                        <div className={`text-lg font-bold mb-4 ${overallStatus === 'Accepted' ? 'text-green-500' : overallStatus === 'Wrong Answer' ? 'text-red-500' : 'text-yellow-500'
+                                            }`}>
+                                            {overallStatus}
+                                        </div>
+                                    )}
+
+                                    {testResults && (
+                                        <div className="space-y-6">
+                                            {/* Summary Metrics */}
+                                            {overallStatus === 'Accepted' && (
+                                                <div className="flex gap-4 mb-6">
+                                                    <div className="bg-[#262626] px-4 py-2 rounded border border-gray-700 flex items-center gap-2">
+                                                        <Clock className="w-4 h-4 text-gray-400" />
+                                                        <span className="text-gray-300 text-sm">Runtime:</span>
+                                                        <span className="text-white font-bold">{Math.max(...testResults.map(r => r.runtime || 0))} ms</span>
+                                                    </div>
+                                                    <div className="bg-[#262626] px-4 py-2 rounded border border-gray-700 flex items-center gap-2">
+                                                        <Cloud className="w-4 h-4 text-gray-400" />
+                                                        <span className="text-gray-300 text-sm">Memory:</span>
+                                                        <span className="text-white font-bold">{(Math.max(...testResults.map(r => r.memory || 0)) / 1024 / 1024).toFixed(1)} MB</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-3">
+                                                {testResults.map((result, i) => (
+                                                    <div key={i} className="bg-[#262626] rounded-lg border border-gray-700 overflow-hidden">
+                                                        <div className="flex items-center justify-between px-4 py-2 bg-black/20">
+                                                            <span className="font-medium text-gray-300 text-sm">TestCase {i + 1}</span>
+                                                            <span className={`text-xs px-2 py-0.5 rounded ${result.passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                                                }`}>
+                                                                {result.passed ? 'Passed' : 'Failed'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="p-3 space-y-2">
+                                                            {!result.passed && result.error ? (
+                                                                <div className="text-red-400 font-mono text-sm bg-red-900/10 p-2 rounded">
+                                                                    {result.error}
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Input</span>
+                                                                            <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
+                                                                                {result.input}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Expected Output</span>
+                                                                            <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
+                                                                                {result.expectedOutput}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Output</span>
+                                                                        <div className={`bg-[#1e1e1e] p-2 rounded font-mono text-sm overflow-x-auto ${result.passed ? 'text-green-300' : 'text-red-300'
+                                                                            }`}>
+                                                                            {result.actualOutput}
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!testResults && !loading && (
+                                        <div className="text-gray-500 text-center py-10">
+                                            Run or Submit code to see results
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 
-export default ProblemDetail;
+export default ContestProblem;
