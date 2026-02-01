@@ -69,7 +69,7 @@ const JudgeLeaderboard = () => {
         fetchLeaderboard();
 
         // Socket Connection
-        const API_URL = import.meta.env.VITE_API_URL || 'https://codeminati-backend.onrender.com/api';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://codeminati-backend-1.onrender.com/api';
         const SOCKET_URL = API_URL.replace('/api', '');
         const newSocket = io(SOCKET_URL);
         setSocket(newSocket);
