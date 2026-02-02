@@ -1,35 +1,47 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { login, googleLogin } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await login(email, password);
-        if (success) {
-            const origin = location.state?.from || '/';
-            navigate(origin);
+        setIsSubmitting(true);
+        try {
+            const success = await login(email, password);
+            if (success) {
+                const origin = location.state?.from || '/';
+                navigate(origin);
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleGoogleSuccess = async (tokenResponse) => {
-        const success = await googleLogin(tokenResponse.access_token);
-        if (success) {
-            const origin = location.state?.from || '/';
-            navigate(origin);
+        setIsSubmitting(true);
+        try {
+            const success = await googleLogin(tokenResponse.access_token);
+            if (success) {
+                const origin = location.state?.from || '/';
+                navigate(origin);
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleGoogleFailure = () => {
         console.error("Google Login Failed");
+        setIsSubmitting(false);
     };
 
     const loginWithGoogle = useGoogleLogin({
@@ -85,10 +97,20 @@ const Login = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-primary hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2"
+                        disabled={isSubmitting}
+                        className={`w-full bg-primary hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
-                        <span>Sign In</span>
-                        <ArrowRight className="h-5 w-5" />
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>Signing In...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>Sign In</span>
+                                <ArrowRight className="h-5 w-5" />
+                            </>
+                        )}
                     </button>
                 </form>
 
