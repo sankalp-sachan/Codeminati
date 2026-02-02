@@ -59,11 +59,9 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         try {
-            const { data } = await client.post('/auth/register', userData);
-            localStorage.setItem('token', data.token);
-            client.defaults.headers.authorization = `Bearer ${data.token}`;
-            setUser(data);
-            toast.success('Registration successful!');
+            await client.post('/auth/register', userData);
+            // Don't set token or user here. Verification needed.
+            toast.success('Registration successful! Please check your email.');
             return true;
         } catch (error) {
             toast.error(error.response?.data?.message || 'Registration failed');

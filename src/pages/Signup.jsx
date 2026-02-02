@@ -23,7 +23,7 @@ const Signup = () => {
         try {
             const success = await register(formData);
             if (success) {
-                navigate('/');
+                navigate('/verify-email', { state: { email: formData.email } });
             } else {
                 setLoading(false);
             }
