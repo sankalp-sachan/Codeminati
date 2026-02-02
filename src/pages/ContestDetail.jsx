@@ -237,7 +237,7 @@ const ContestDetail = () => {
 
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white mb-4">Tasks</h2>
-                {contest.problems.map((problem, index) => {
+                {(contest.problems || []).map((problem, index) => {
                     const solved = isSolved(problem._id);
                     return (
                         <div key={problem._id} className={`flex items-center justify-between p-4 rounded-lg border ${solved ? 'bg-green-900/10 border-green-800' : 'bg-gray-800 border-gray-700'} hover:border-gray-500 transition`}>

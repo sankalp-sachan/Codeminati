@@ -34,9 +34,10 @@ const JudgeLeaderboard = () => {
         const fetchContests = async () => {
             try {
                 const { data } = await client.get('/contests');
-                setContests(data);
+                setContests(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Failed to fetch contests", err);
+                setContests([]);
             }
         };
         fetchContests();
@@ -58,9 +59,10 @@ const JudgeLeaderboard = () => {
             setLoading(true);
             try {
                 const { data } = await client.get(`/leaderboard?contestId=${selectedContestId}`);
-                setLeaderboard(data);
+                setLeaderboard(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Failed to fetch leaderboard', error);
+                setLeaderboard([]);
             } finally {
                 setLoading(false);
             }
@@ -144,7 +146,7 @@ const JudgeLeaderboard = () => {
         return <span className="text-gray-400 font-mono w-6 text-center">{rank}</span>;
     };
 
-    const filteredLeaderboard = leaderboard.filter(u =>
+    const filteredLeaderboard = (Array.isArray(leaderboard) ? leaderboard : []).filter(u =>
         u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
@@ -223,7 +225,7 @@ const JudgeLeaderboard = () => {
                         <div className="p-8">
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold shadow-lg">
-                                    {selectedUser.avatar ? <img src={selectedUser.avatar} className="h-full w-full rounded-full object-cover" /> : selectedUser.username[0].toUpperCase()}
+                                    {selectedUser.avatar ? <img src={selectedUser.avatar} className="h-full w-full rounded-full object-cover" /> : selectedUser.username?.[0]?.toUpperCase()}
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold text-white">{selectedUser.name || selectedUser.username}</h2>
@@ -349,7 +351,7 @@ const JudgeLeaderboard = () => {
                         <div className="bg-[#1e1e1e] px-6 py-3 rounded-xl border border-gray-800 text-center">
                             <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Active Users</span>
                             <div className="text-2xl font-mono font-bold text-green-400">
-                                {leaderboard.length}
+                                {leaderboard?.length || 0}
                             </div>
                         </div>
                     </div>

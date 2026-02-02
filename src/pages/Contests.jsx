@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
 import { format } from 'date-fns';
-import { Trophy, Bell, CheckCircle, Plus, Calendar, Clock, BookOpen, X } from 'lucide-react';
+import { Trophy, Bell, CheckCircle, Plus, Calendar, Clock, BookOpen, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
@@ -32,9 +32,10 @@ const Contests = () => {
         const fetchData = async () => {
             try {
                 const { data } = await client.get('/contests');
-                setContests(data);
+                setContests(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Failed to fetch data", error);
+                setContests([]);
             } finally {
                 setLoading(false);
             }
@@ -51,19 +52,22 @@ const Contests = () => {
         }
     };
 
+    const [isRegistering, setIsRegistering] = useState(null); // Store contest ID being registered
+
     const handleNotifyClick = async (contest) => {
         if (!currentUser) {
             toast.error("Please login to register");
             return;
         }
 
-        // Immediate Registration
+        setIsRegistering(contest._id);
         try {
             await client.post(`/contests/${contest._id}/register`, { goal: 'Participate', experience: 'General' });
             setSuccessModal({ show: true, contest });
-            // Refresh logic could go here
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to register");
+        } finally {
+            setIsRegistering(null);
         }
     };
 
@@ -162,7 +166,7 @@ const Contests = () => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
-                        {contests.filter(contest => {
+                        {(Array.isArray(contests) ? contests : []).filter(contest => {
                             const now = new Date();
                             const start = new Date(contest.startTime);
                             const end = new Date(contest.endTime);
@@ -175,7 +179,7 @@ const Contests = () => {
                                 No {activeTab} contests found.
                             </div>
                         ) : (
-                            contests
+                            (Array.isArray(contests) ? contests : [])
                                 .filter(contest => {
                                     const now = new Date();
                                     const start = new Date(contest.startTime);
@@ -241,9 +245,15 @@ const Contests = () => {
                                                     ) : (
                                                         <button
                                                             onClick={() => handleNotifyClick(contest)}
-                                                            className="px-6 py-2 rounded-lg font-medium bg-gray-700 text-gray-200 hover:bg-gray-600 flex items-center gap-2 transition"
+                                                            disabled={isRegistering === contest._id}
+                                                            className={`px-6 py-2 rounded-lg font-medium bg-gray-700 text-gray-200 hover:bg-gray-600 flex items-center gap-2 transition ${isRegistering === contest._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         >
-                                                            <Bell size={18} /> Notify Me
+                                                            {isRegistering === contest._id ? (
+                                                                <Loader2 size={18} className="animate-spin" />
+                                                            ) : (
+                                                                <Bell size={18} />
+                                                            )}
+                                                            {isRegistering === contest._id ? 'Registering...' : 'Notify Me'}
                                                         </button>
                                                     )
                                                 ) : (
