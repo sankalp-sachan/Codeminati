@@ -166,6 +166,7 @@ const ContestProblem = () => {
 
     // Fetch Contest Details for Timer & Navigation
     const [contestProblems, setContestProblems] = useState([]);
+    const [isCompleted, setIsCompleted] = useState(false);
 
     useEffect(() => {
         if (contestId) {
@@ -174,13 +175,20 @@ const ContestProblem = () => {
                     const { data } = await client.get(`/contests/${contestId}`);
                     setContestEndTime(new Date(data.endTime));
                     if (data.problems) setContestProblems(data.problems);
+
+                    if (data.userStatus?.completed) {
+                        setIsCompleted(true);
+                        toast.error("Contest submitted. You cannot edit anymore.");
+                        navigate(`/contests/${contestId}`); // Force back
+                    }
+
                 } catch (err) {
                     console.error('Failed to fetch contest details', err);
                 }
             };
             fetchContest();
         }
-    }, [contestId]);
+    }, [contestId, navigate]);
 
     // Navigation Logic
     const currentProblemIndex = contestProblems.findIndex(p => p.slug === slug);

@@ -151,11 +151,11 @@ const ContestDetail = () => {
                     </p>
 
                     <div className="flex flex-col gap-3">
-                        {contest.approvalStatus === 'guest' && canRequest && (
+                        {(contest.approvalStatus === 'guest' || contest.approvalStatus === 'none') && canRequest && (
                             <button
                                 onClick={handleRequestAccess}
-                                disabled={requesting}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
+                                disabled={requesting || contest.approvalStatus === 'pending'}
+                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {requesting ? 'Requesting...' : 'Request Early Access'}
                             </button>
@@ -233,12 +233,36 @@ const ContestDetail = () => {
                         <span className="font-bold">Congratulations! You have completed this contest and earned 500 bonus coins!</span>
                     </div>
                 )}
+
+                {/* BUTTON: Finish / End Contest */}
+                {!isEnded && !contest.userStatus?.completed && (
+                    <div className="flex justify-end mt-4">
+                        <button
+                            onClick={async () => {
+                                if (window.confirm("Are you sure you want to finish the contest? You won't be able to submit anymore.")) {
+                                    try {
+                                        await client.post(`/contests/${id}/finish`);
+                                        alert("Contest submitted successfully!");
+                                        window.location.reload();
+                                    } catch (e) {
+                                        alert("Error finishing contest");
+                                    }
+                                }
+                            }}
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg"
+                        >
+                            Finish Contest
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white mb-4">Tasks</h2>
                 {(contest.problems || []).map((problem, index) => {
                     const solved = isSolved(problem._id);
+                    const isCompleted = contest.userStatus?.completed;
+
                     return (
                         <div key={problem._id} className={`flex items-center justify-between p-4 rounded-lg border ${solved ? 'bg-green-900/10 border-green-800' : 'bg-gray-800 border-gray-700'} hover:border-gray-500 transition`}>
                             <div className="flex items-center gap-4">
@@ -258,9 +282,9 @@ const ContestDetail = () => {
 
                             <div className="flex items-center gap-4">
                                 {solved && <span className="text-yellow-400 font-bold text-sm">+10 Coins</span>}
-                                {isEnded ? (
+                                {isEnded || isCompleted ? (
                                     <span className="px-4 py-2 bg-gray-700 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
-                                        Ended
+                                        {isCompleted ? "Completed" : "Ended"}
                                     </span>
                                 ) : (
                                     <Link

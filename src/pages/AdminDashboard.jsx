@@ -558,14 +558,14 @@ const AdminDashboard = () => {
                                                     <td className="py-6 px-8">
                                                         <div className="flex items-center gap-4">
                                                             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center font-black text-orange-500">
-                                                                {req.user?.name?.charAt(0) || 'U'}
+                                                                {req.user?.username?.[0]?.toUpperCase() || req.user?.email?.[0]?.toUpperCase() || '?'}
                                                             </div>
                                                             <div>
                                                                 <div className="text-white font-black uppercase text-sm tracking-tight group-hover:text-orange-400 transition-colors">
-                                                                    {req.user?.name}
+                                                                    {req.user?.name || req.user?.username || <span className="text-red-500 italic">Deleted User</span>}
                                                                 </div>
                                                                 <div className="text-[10px] text-gray-500 font-mono tracking-tighter">
-                                                                    {req.user?.email}
+                                                                    {req.user?.email || 'No Email'}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -574,7 +574,7 @@ const AdminDashboard = () => {
                                                         <div className="flex items-center gap-2">
                                                             <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
                                                             <span className="text-sm font-bold text-gray-300 uppercase tracking-tighter">
-                                                                {req.contest?.title}
+                                                                {req.contest?.title || 'Unknown Contest'}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -587,20 +587,24 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="py-6 px-8 text-right">
-                                                        <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
-                                                            <button
-                                                                onClick={() => handleApproval(req._id, 'rejected')}
-                                                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                                                            >
-                                                                Dismiss
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleApproval(req._id, 'approved')}
-                                                                className="px-6 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-900/20 transition-all transform active:scale-95"
-                                                            >
-                                                                Grant Access
-                                                            </button>
-                                                        </div>
+                                                        {req.user ? (
+                                                            <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
+                                                                <button
+                                                                    onClick={() => handleApproval(req._id, 'rejected')}
+                                                                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                                >
+                                                                    Dismiss
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleApproval(req._id, 'approved')}
+                                                                    className="px-6 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-900/20 transition-all transform active:scale-95"
+                                                                >
+                                                                    Grant Access
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-500">Action Unavailable</span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))
