@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
-import { Plus, Save, Download, Users, MessageSquare, Check, X, ExternalLink, Trash2, ShieldAlert, Monitor, User as UserIcon, Clock } from 'lucide-react';
+import { Plus, Save, Download, Users, MessageSquare, Check, X, ExternalLink, Trash2, ShieldAlert, Monitor, User as UserIcon, Clock, RotateCcw } from 'lucide-react';
 import Loader from '../components/Loader';
 
 const AdminDashboard = () => {
