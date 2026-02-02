@@ -62,52 +62,12 @@ const ContestProblem = () => {
     }, [slug]);
 
     // Issue 6: Violation Listeners
-    useEffect(() => {
-        if (!contestId) return;
+    // Violation Listeners REMOVED by user request
 
-        const handleVisibilityChange = () => {
-            if (document.hidden) logViolation('tab_switch', 'User switched tab or minimized window');
-        };
-        const handleBlur = () => {
-            logViolation('window_blur', 'Window lost focus');
-        };
-        const handleCopy = () => {
-            logViolation('copy', 'User copied content');
-        };
-        const handlePaste = () => {
-            // logViolation('paste', 'User pasted content'); // Optional, maybe allowed? prompt says "Tab switch / copy paste violation"
-            // Usually paste is allowed in IDEs but for strict contests maybe not?
-            // User Prompt: "Fix frontend listeners: visibilitychange, copy, paste, blur. Send ... /api/violation/log"
-            logViolation('paste', 'User pasted content');
-        };
 
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleBlur);
-        document.addEventListener('copy', handleCopy);
-        document.addEventListener('paste', handlePaste);
 
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('blur', handleBlur);
-            document.removeEventListener('copy', handleCopy);
-            document.removeEventListener('paste', handlePaste);
-        };
-    }, [contestId, slug]);
 
-    const logViolation = async (action, details) => {
-        try {
-            await client.post('/violation/log', {
-                contestId,
-                problemId: problem?._id,
-                action,
-                details
-            });
-        } catch (err) {
-            console.error('Failed to log violation', err);
-        }
-    };
 
-    useAntiCheat(contestId, problem?._id, !!contestId && !isContestEnded);
 
     // UI State
     const [loading, setLoading] = useState(false);

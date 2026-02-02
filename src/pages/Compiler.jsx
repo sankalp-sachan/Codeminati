@@ -123,14 +123,10 @@ const Compiler = () => {
                             value={code}
                             onChange={setCode}
                             onMount={(editor, monaco) => {
-                                const container = editor.getContainerDomNode();
-                                container.addEventListener('copy', (e) => e.preventDefault(), true);
-                                container.addEventListener('paste', (e) => e.preventDefault(), true);
-                                container.addEventListener('cut', (e) => e.preventDefault(), true);
-                                container.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+                                // Restrictions removed
                             }}
                             options={{
-                                contextmenu: false,
+                                contextmenu: true,
                                 fontSize: 14,
                                 minimap: { enabled: false },
                                 scrollBeyondLastLine: false,

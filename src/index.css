@@ -20,10 +20,6 @@ body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
 }
 
 input, textarea {

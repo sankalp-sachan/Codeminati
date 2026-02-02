@@ -54,7 +54,6 @@ const ProblemDetail = () => {
     const [timeLeft, setTimeLeft] = useState(null);
     const [isContestEnded, setIsContestEnded] = useState(false);
 
-    useAntiCheat(contestId, problem?._id, !!contestId && !isContestEnded);
 
     // UI State
     const [loading, setLoading] = useState(false);
