@@ -37,7 +37,8 @@ const AppLayout = () => {
   const isSensitivePath = () =>
     location.pathname.startsWith('/problems/') ||
     location.pathname === '/compiler' ||
-    location.pathname.includes('/contests/');
+    location.pathname.includes('/contests/') ||
+    ['/login', '/signup', '/verify-email', '/forgot-password', '/reset-password'].includes(location.pathname);
 
   const hideFooter = isSensitivePath();
 

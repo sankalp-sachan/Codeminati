@@ -290,6 +290,7 @@ const AdminDashboard = () => {
                                 <Users size={18} />
                                 <span>User Management</span>
                             </button>
+
                         </>
                     )}
 
@@ -496,67 +497,110 @@ const AdminDashboard = () => {
                     )}
 
                     {activeTab === 'approvals' && (
-                        <div>
-                            <h2 className="text-xl font-semibold mb-6 flex items-center space-x-2">
-                                <Check className="text-orange-400" />
-                                <span>Contest Access Requests</span>
-                            </h2>
-                            <div className="flex space-x-4 mb-6">
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white flex items-center space-x-3 tracking-tight">
+                                        <div className="p-2 bg-orange-500/20 rounded-xl">
+                                            <Check className="text-orange-500 h-6 w-6" />
+                                        </div>
+                                        <span>Participation Approvals</span>
+                                    </h2>
+                                    <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+                                        Manage User <span className="text-orange-500/80">Consent</span> & Access Requests
+                                    </p>
+                                </div>
+
                                 <button
                                     onClick={fetchApprovals}
-                                    className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 flex items-center space-x-2"
+                                    className="group px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl flex items-center space-x-2 transition-all border border-gray-700 hover:border-orange-500/50"
                                 >
-                                    <span>Refresh List</span>
+                                    <RotateCcw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+                                    <span className="text-sm font-bold">Sync Requests</span>
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="text-sm text-gray-400 border-b border-gray-700">
-                                            <th className="py-3 px-2">User</th>
-                                            <th className="py-3 px-2">Contest</th>
-                                            <th className="py-3 px-2">Requested At</th>
-                                            <th className="py-3 px-2 text-right">Actions</th>
+                            <div className="glass rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/[0.02] border-b border-white/5">
+                                        <tr className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">
+                                            <th className="py-6 px-8">User Information</th>
+                                            <th className="py-6 px-8">Target Contest</th>
+                                            <th className="py-6 px-8">Time Stamp</th>
+                                            <th className="py-6 px-8 text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="text-sm">
+                                    <tbody className="divide-y divide-white/5">
                                         {loadingApprovals ? (
                                             <tr>
-                                                <td colSpan="4" className="py-8">
-                                                    <div className="flex justify-center">
-                                                        <Loader size="lg" />
+                                                <td colSpan="4" className="py-32 text-center">
+                                                    <div className="flex flex-col items-center gap-4">
+                                                        <Loader size="xl" />
+                                                        <span className="text-gray-500 text-xs font-bold animate-pulse">RETRIVING SUBMISSIONS...</span>
                                                     </div>
                                                 </td>
                                             </tr>
                                         ) : approvals.length === 0 ? (
                                             <tr>
-                                                <td colSpan="4" className="py-8 text-center text-gray-500">No pending approvals</td>
+                                                <td colSpan="4" className="py-32 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="p-4 bg-gray-900 rounded-full">
+                                                            <Check className="text-gray-700 h-8 w-8" />
+                                                        </div>
+                                                        <h3 className="text-white font-bold text-lg">All caught up!</h3>
+                                                        <p className="text-gray-500 text-sm">No pending participation consents at the moment.</p>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ) : (
                                             approvals.map(req => (
-                                                <tr key={req._id} className="border-b border-gray-800 hover:bg-white/5">
-                                                    <td className="py-3 px-2">
-                                                        <div className="text-white">{req.user?.name}</div>
-                                                        <div className="text-xs text-gray-500">{req.user?.email}</div>
+                                                <tr key={req._id} className="hover:bg-white/[0.02] transition-colors group">
+                                                    <td className="py-6 px-8">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center font-black text-orange-500">
+                                                                {req.user?.name?.charAt(0) || 'U'}
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-white font-black uppercase text-sm tracking-tight group-hover:text-orange-400 transition-colors">
+                                                                    {req.user?.name}
+                                                                </div>
+                                                                <div className="text-[10px] text-gray-500 font-mono tracking-tighter">
+                                                                    {req.user?.email}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td className="py-3 px-2 text-gray-300">{req.contest?.title}</td>
-                                                    <td className="py-3 px-2 text-gray-400 text-xs">
-                                                        {new Date(req.createdAt).toLocaleString()}
+                                                    <td className="py-6 px-8">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                                                            <span className="text-sm font-bold text-gray-300 uppercase tracking-tighter">
+                                                                {req.contest?.title}
+                                                            </span>
+                                                        </div>
                                                     </td>
-                                                    <td className="py-3 px-2 text-right space-x-2">
-                                                        <button
-                                                            onClick={() => handleApproval(req._id, 'approved')}
-                                                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-500 text-xs"
-                                                        >
-                                                            Approve
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleApproval(req._id, 'rejected')}
-                                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 text-xs"
-                                                        >
-                                                            Reject
-                                                        </button>
+                                                    <td className="py-6 px-8">
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            {new Date(req.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-600 font-black tracking-widest mt-0.5 uppercase">
+                                                            {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-6 px-8 text-right">
+                                                        <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
+                                                            <button
+                                                                onClick={() => handleApproval(req._id, 'rejected')}
+                                                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                            >
+                                                                Dismiss
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleApproval(req._id, 'approved')}
+                                                                className="px-6 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-900/20 transition-all transform active:scale-95"
+                                                            >
+                                                                Grant Access
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
