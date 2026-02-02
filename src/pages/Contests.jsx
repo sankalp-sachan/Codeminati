@@ -89,7 +89,19 @@ const Contests = () => {
 
         setCreating(true);
         try {
-            await client.post('/contests', newContest);
+            // Treat the input time as IST (+05:30) regardless of local browser time
+            const formatDateToIST = (dateString) => {
+                if (!dateString) return '';
+                return new Date(`${dateString}:00+05:30`).toISOString();
+            };
+
+            const payload = {
+                ...newContest,
+                startTime: formatDateToIST(newContest.startTime),
+                endTime: formatDateToIST(newContest.endTime)
+            };
+
+            await client.post('/contests', payload);
             toast.success("Contest created successfully!");
             setShowCreateModal(false);
             setNewContest({ title: '', description: '', startTime: '', endTime: '', problems: [] });
@@ -395,7 +407,7 @@ const Contests = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1 flex items-center gap-1">
-                                            <Calendar size={14} /> Start Time
+                                            <Calendar size={14} /> Start Time (IST)
                                         </label>
                                         <input
                                             type="datetime-local"
@@ -407,7 +419,7 @@ const Contests = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1 flex items-center gap-1">
-                                            <Clock size={14} /> End Time
+                                            <Clock size={14} /> End Time (IST)
                                         </label>
                                         <input
                                             type="datetime-local"
