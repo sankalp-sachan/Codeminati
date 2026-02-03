@@ -234,9 +234,19 @@ const ContestDetail = () => {
                     </div>
                 )}
 
-                {/* BUTTON: Finish / End Contest */}
-                {!isEnded && !contest.userStatus?.completed && (
-                    <div className="flex justify-end mt-4">
+                {/* BUTTON: Finish / End Contest or View Leaderboard */}
+                <div className="flex justify-end mt-4 gap-4">
+                    {contest.resultsPublished && (
+                        <Link
+                            to={`/judge/leaderboard?contestId=${id}`}
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2"
+                        >
+                            <Trophy size={18} />
+                            View Results
+                        </Link>
+                    )}
+
+                    {!isEnded && !contest.userStatus?.completed && (
                         <button
                             onClick={async () => {
                                 if (window.confirm("Are you sure you want to finish the contest? You won't be able to submit anymore.")) {
@@ -253,8 +263,8 @@ const ContestDetail = () => {
                         >
                             Finish Contest
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             <div className="space-y-4">

@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { Trophy, Clock, Medal, Activity, Search, AlertTriangle, ChevronLeft, Calendar, Users, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import Loader from '../components/Loader';
 
 const JudgeLeaderboard = () => {
+    const { user } = useAuth();
+    const isAdminOrJudge = user && (user.role === 'admin' || user.role === 'judge' || user.role === 'assistant');
+
     const [searchParams, setSearchParams] = useSearchParams();
     const contestIdParam = searchParams.get('contestId');
 
@@ -159,9 +163,13 @@ const JudgeLeaderboard = () => {
                     <div className="text-center md:text-left border-b border-gray-800 pb-8">
                         <h1 className="text-4xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent flex items-center gap-3 justify-center md:justify-start">
                             <Trophy className="h-10 w-10 text-yellow-500" />
-                            Judge Control Center
+                            {isAdminOrJudge ? 'Judge Control Center' : 'Contest Hall of Fame'}
                         </h1>
-                        <p className="text-gray-400 mt-2">Select a contest to monitor live rankings and integrity violations.</p>
+                        <p className="text-gray-400 mt-2">
+                            {isAdminOrJudge
+                                ? 'Select a contest to monitor live rankings and integrity violations.'
+                                : 'View the final standings and performance of participants.'}
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -385,7 +393,7 @@ const JudgeLeaderboard = () => {
                                     <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider">Participant</th>
                                     <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider text-right">Score</th>
                                     <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider text-center">Problems</th>
-                                    <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider text-center">Violations</th>
+                                    {isAdminOrJudge && <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider text-center">Violations</th>}
                                     <th className="px-6 py-5 font-semibold text-gray-400 text-xs uppercase tracking-wider text-right">Last Submission</th>
                                 </tr>
                             </thead>
@@ -428,15 +436,17 @@ const JudgeLeaderboard = () => {
                                                 {user.problemsSolved}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <div className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${user.violations > 5 ? 'bg-red-500/20 text-red-500 border-red-500/30' :
-                                                user.violations > 0 ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' :
-                                                    'bg-green-500/20 text-green-500 border-green-500/30'
-                                                }`}>
-                                                {user.violations > 0 && <AlertTriangle className="h-3 w-3" />}
-                                                <span>{user.violations}</span>
-                                            </div>
-                                        </td>
+                                        {isAdminOrJudge && (
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                <div className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${user.violations > 5 ? 'bg-red-500/20 text-red-500 border-red-500/30' :
+                                                    user.violations > 0 ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' :
+                                                        'bg-green-500/20 text-green-500 border-green-500/30'
+                                                    }`}>
+                                                    {user.violations > 0 && <AlertTriangle className="h-3 w-3" />}
+                                                    <span>{user.violations}</span>
+                                                </div>
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                                             {user.lastSubmission ? new Date(user.lastSubmission).toLocaleTimeString() : '-'}
                                         </td>

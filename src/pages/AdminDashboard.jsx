@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
-import { Plus, Save, Download, Users, MessageSquare, Check, X, ExternalLink, Trash2, ShieldAlert, Monitor, User as UserIcon, Clock, RotateCcw } from 'lucide-react';
+import { Plus, Save, Download, Users, MessageSquare, Check, X, ExternalLink, Trash2, ShieldAlert, Monitor, User as UserIcon, Clock, RotateCcw, Trophy, Eye, EyeOff } from 'lucide-react';
 import Loader from '../components/Loader';
 
 const AdminDashboard = () => {
@@ -249,6 +249,34 @@ const AdminDashboard = () => {
     };
 
 
+    const [contests, setContests] = useState([]);
+    const [loadingContests, setLoadingContests] = useState(false);
+
+    const fetchContests = async () => {
+        setLoadingContests(true);
+        try {
+            const { data } = await client.get('/contests');
+            setContests(data);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to fetch contests');
+        } finally {
+            setLoadingContests(false);
+        }
+    };
+
+    const handleTogglePublish = async (id) => {
+        try {
+            const { data } = await client.put(`/contests/${id}/publish`);
+            toast.success(data.message);
+            fetchContests();
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Failed to toggle publish status');
+        }
+    };
+
+
     if (!user || (user.role !== 'admin' && user.role !== 'assistant')) {
         return <div className="p-10 text-center text-red-500">Access Denied. Admins and Assistants Only.</div>;
     }
@@ -289,6 +317,15 @@ const AdminDashboard = () => {
                             >
                                 <Users size={18} />
                                 <span>User Management</span>
+                            </button>
+
+                            <button
+                                onClick={() => { setActiveTab('publish-results'); fetchContests(); }}
+                                className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors ${activeTab === 'publish-results' ? 'bg-amber-600 text-white shadow-lg' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    }`}
+                            >
+                                <Trophy size={18} />
+                                <span>Publish Results</span>
                             </button>
 
                         </>
@@ -1143,6 +1180,94 @@ const AdminDashboard = () => {
                                                                 <Check size={16} />
                                                             </button>
                                                         )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'publish-results' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white flex items-center space-x-3 tracking-tight">
+                                        <div className="p-2 bg-amber-500/20 rounded-xl">
+                                            <Trophy className="text-amber-500 h-6 w-6" />
+                                        </div>
+                                        <span>Publish Contest Results</span>
+                                    </h2>
+                                    <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+                                        Manage <span className="text-amber-500/80">Visibility</span> of Result Leaderboards
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={fetchContests}
+                                    className="group px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl flex items-center space-x-2 transition-all border border-gray-700 hover:border-amber-500/50"
+                                >
+                                    <RotateCcw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+                                    <span className="text-sm font-bold">Refresh Contests</span>
+                                </button>
+                            </div>
+
+                            <div className="glass rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/[0.02] border-b border-white/5">
+                                        <tr className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">
+                                            <th className="py-6 px-8">Contest Name</th>
+                                            <th className="py-6 px-8">Schedule</th>
+                                            <th className="py-6 px-8 text-right">Visibility Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {loadingContests ? (
+                                            <tr>
+                                                <td colSpan="4" className="py-32 text-center">
+                                                    <Loader size="xl" />
+                                                </td>
+                                            </tr>
+                                        ) : contests.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="4" className="py-32 text-center">
+                                                    <p className="text-gray-500">No contests found.</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            contests.map(c => (
+                                                <tr key={c._id} className="hover:bg-white/[0.02] transition-colors group">
+                                                    <td className="py-6 px-8">
+                                                        <div className="text-white font-black uppercase text-sm tracking-tight group-hover:text-amber-400 transition-colors">
+                                                            {c.title}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 font-mono tracking-tighter">
+                                                            ID: {c._id}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-6 px-8">
+                                                        <div className="text-xs text-gray-400">
+                                                            {new Date(c.startTime).toLocaleDateString()} - {new Date(c.endTime).toLocaleDateString()}
+                                                        </div>
+                                                        <div className={`text-[10px] font-black uppercase mt-1 ${new Date() > new Date(c.endTime) ? 'text-red-500' : 'text-green-500'}`}>
+                                                            {new Date() > new Date(c.endTime) ? 'Ended' : 'Ongoing/Upcoming'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-6 px-8 text-right">
+                                                        <button
+                                                            onClick={() => handleTogglePublish(c._id)}
+                                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ml-auto ${c.resultsPublished
+                                                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-900/20'
+                                                                : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-amber-500/50 hover:text-white'}`}
+                                                        >
+                                                            {c.resultsPublished ? (
+                                                                <><Eye size={14} /><span>Published</span></>
+                                                            ) : (
+                                                                <><EyeOff size={14} /><span>Publish Results</span></>
+                                                            )}
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
