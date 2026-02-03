@@ -136,7 +136,7 @@ const AdminDashboard = () => {
         setLoadingUsers(true);
         try {
             const { data } = await client.get(`/admin/users?search=${searchKeyword}`);
-            setUsers(data);
+            setUsers(data || []);
         } catch (error) {
             console.error(error);
             toast.error('Failed to fetch users');
@@ -225,8 +225,8 @@ const AdminDashboard = () => {
         setLoadingActivities(true);
         try {
             const { data } = await client.get('/contests/activities');
-            setActivities(data.activities);
-            setActivityStats(data.stats);
+            setActivities(data.activities || []);
+            setActivityStats(data.stats || []);
         } catch (error) {
             console.error(error);
             toast.error('Failed to fetch security logs');
@@ -918,7 +918,7 @@ const AdminDashboard = () => {
                                         <Monitor className="h-20 w-20 text-red-500" />
                                     </div>
                                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Live Violations</div>
-                                    <div className="text-5xl font-black text-white">{activities.length}</div>
+                                    <div className="text-5xl font-black text-white">{activities?.length || 0}</div>
                                     <div className="mt-4 flex items-center gap-2 text-red-500 text-xs font-bold">
                                         <Activity className="h-3 w-3" />
                                         <span>SYSTEM ONLINE</span>
@@ -930,7 +930,7 @@ const AdminDashboard = () => {
                                         <Users className="h-20 w-20 text-orange-500" />
                                     </div>
                                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Flagged Users</div>
-                                    <div className="text-5xl font-black text-white">{activityStats.length}</div>
+                                    <div className="text-5xl font-black text-white">{activityStats?.length || 0}</div>
                                     <div className="mt-4 flex items-center gap-2 text-orange-500 text-xs font-bold">
                                         <ShieldAlert className="h-3 w-3" />
                                         <span>RISK DETECTED</span>
@@ -943,9 +943,9 @@ const AdminDashboard = () => {
                                     </div>
                                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Avg Swaps/User</div>
                                     <div className="text-5xl font-black text-white">
-                                        {activityStats.length > 0
+                                        {activityStats?.length > 0
                                             ? (activityStats.reduce((a, b) => a + b.tabSwitches, 0) / activityStats.length).toFixed(1)
-                                            : 0
+                                            : "0.0"
                                         }
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 text-blue-500 text-xs font-bold">
@@ -976,7 +976,7 @@ const AdminDashboard = () => {
                                         <tbody className="divide-y divide-white/5">
                                             {loadingActivities ? (
                                                 <tr><td colSpan="4" className="py-20 text-center"><Loader size="xl" /></td></tr>
-                                            ) : activityStats.length === 0 ? (
+                                            ) : (activityStats?.length || 0) === 0 ? (
                                                 <tr><td colSpan="4" className="py-20 text-center text-gray-500">No security incidents recorded. System is secure.</td></tr>
                                             ) : (
                                                 activityStats.map(stat => (
@@ -984,11 +984,11 @@ const AdminDashboard = () => {
                                                         <td className="px-8 py-6">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="h-10 w-10 bg-gradient-to-br from-gray-800 to-black rounded-full flex items-center justify-center border border-white/10 font-black text-red-500">
-                                                                    {stat.name.charAt(0)}
+                                                                    {stat.name?.charAt(0) || '?'}
                                                                 </div>
                                                                 <div>
-                                                                    <div className="font-black text-white group-hover:text-red-400 transition-colors uppercase text-sm tracking-tight">{stat.name}</div>
-                                                                    <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{stat.email}</div>
+                                                                    <div className="font-black text-white group-hover:text-red-400 transition-colors uppercase text-sm tracking-tight">{stat.name || 'Unknown'}</div>
+                                                                    <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{stat.email || 'N/A'}</div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1090,7 +1090,7 @@ const AdminDashboard = () => {
                                             <tr>
                                                 <td colSpan="5" className="py-8 text-center"><Loader size="md" /></td>
                                             </tr>
-                                        ) : feedbacks.length === 0 ? (
+                                        ) : (feedbacks?.length || 0) === 0 ? (
                                             <tr>
                                                 <td colSpan="5" className="py-8 text-center text-gray-500">No feedback submissions found</td>
                                             </tr>
@@ -1121,7 +1121,7 @@ const AdminDashboard = () => {
                                                             f.status === 'reviewed' ? 'bg-blue-500/10 text-blue-500' :
                                                                 'bg-gray-800 text-gray-400'
                                                             }`}>
-                                                            {f.status.toUpperCase()}
+                                                            {f.status?.toUpperCase() || 'PENDING'}
                                                         </span>
                                                     </td>
                                                     <td className="py-3 px-2 text-right space-x-1">

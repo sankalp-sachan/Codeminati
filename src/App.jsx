@@ -34,13 +34,7 @@ import { useEffect, useState } from 'react';
 // Layout Component Wrapper to handle conditional Footer
 const AppLayout = () => {
   const location = useLocation();
-  const isSensitivePath = () =>
-    location.pathname.startsWith('/problems/') ||
-    location.pathname === '/compiler' ||
-    location.pathname.includes('/contests/') ||
-    ['/login', '/signup', '/verify-email', '/forgot-password', '/reset-password'].includes(location.pathname);
-
-  const hideFooter = isSensitivePath();
+  const showFooter = location.pathname === '/';
 
   return (
     <>
@@ -48,7 +42,7 @@ const AppLayout = () => {
       <main className="flex-grow">
         <Outlet />
       </main>
-      {!hideFooter && <Footer />}
+      {showFooter && <Footer />}
     </>
   );
 };
