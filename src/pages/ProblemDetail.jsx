@@ -554,7 +554,6 @@ const ProblemDetail = () => {
                                         </div>
                                     )}
                                     <span className="text-white font-bold">{user.username}</span>
-                                    <span className="text-white font-bold">{user.username}</span>
                                     <span className="text-gray-500 text-sm">submitted just now</span>
                                 </div>
 
@@ -681,7 +680,7 @@ const ProblemDetail = () => {
                             <ChevronLeft className="h-4 w-4" />
                         </button>
                         <span className="text-[11px] text-gray-400 font-mono px-3 font-bold">
-                            {contestId ? `${currentProblemIndex + 1} / ${contestProblems.length}` : `${problem.id} / 50`}
+                            {contestId ? `${currentProblemIndex + 1} / ${contestProblems.length}` : `${problem.problemNumber} / ${problem.totalProblems || problem.problemNumber}`}
                         </span>
                         <button
                             onClick={() => (contestId ? nextProblem?.slug : problem.nextSlug) && handleNavigateProblem(contestId ? nextProblem?.slug : problem.nextSlug)}
@@ -746,9 +745,9 @@ const ProblemDetail = () => {
                             value={language}
                             onChange={(e) => handleLanguageChange(e.target.value)}
                         >
-                            <option value="python">Python 3</option>
-                            <option value="cpp">C++ 17</option>
-                            <option value="c">C 11</option>
+                            <option value="python">Python</option>
+                            <option value="cpp">C++</option>
+                            <option value="c">C</option>
                         </select>
 
                         <button
