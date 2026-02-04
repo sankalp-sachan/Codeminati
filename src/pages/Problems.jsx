@@ -3,7 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Circle, ArrowRight, Search, ChevronLeft, ChevronRight, Clock, ChevronDown, Calendar, Flame, Check } from 'lucide-react';
+import { CheckCircle, Circle, ArrowRight, Search, ChevronLeft, ChevronRight, Clock, ChevronDown, Calendar, Flame, Check, EyeOff, Eye } from 'lucide-react';
 import Loader from '../components/Loader';
 
 const Problems = () => {
@@ -72,6 +72,24 @@ const Problems = () => {
     const handleCategoryChange = (val) => {
         setSelectedCategory(val);
         setPage(1);
+    };
+
+    const handleHideProblem = async (slug) => {
+        if (!user || user.role !== 'admin') {
+            toast.error('Only admins can hide problems');
+            return;
+        }
+        try {
+            const { data } = await client.post(`/problems/${slug}/hide`);
+            toast.success(data.message);
+            // Update local state to reflect visibility change
+            setProblems(prev => prev.map(p =>
+                p.slug === slug ? { ...p, isHidden: data.isHidden } : p
+            ));
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to update problem visibility');
+        }
     };
 
     useEffect(() => {
@@ -145,8 +163,8 @@ const Problems = () => {
                                 key={status}
                                 onClick={() => handleStatusChange(status)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedStatus === status
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                     }`}
                             >
                                 {status}
@@ -161,8 +179,8 @@ const Problems = () => {
                                 key={diff}
                                 onClick={() => handleDifficultyChange(diff)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedDifficulty === diff
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                     }`}
                             >
                                 {diff}
@@ -175,8 +193,8 @@ const Problems = () => {
                         <button
                             onClick={() => setShowCategories(!showCategories)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-2 ${selectedCategory !== 'All'
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                 }`}
                         >
                             <span>{selectedCategory === 'All' ? 'Categories' : selectedCategory}</span>
@@ -190,8 +208,8 @@ const Problems = () => {
                                         key={cat}
                                         onClick={() => { handleCategoryChange(cat); setShowCategories(false); }}
                                         className={`px-3 py-2 rounded-lg text-[10px] text-left uppercase font-bold tracking-tighter transition-colors ${selectedCategory === cat
-                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50'
-                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50'
+                                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
                                             }`}
                                     >
                                         {cat}
@@ -251,13 +269,27 @@ const Problems = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link
-                                                to={`/problems/${problem.slug}`}
-                                                className="inline-flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <span>Solve</span>
-                                                <ArrowRight size={14} />
-                                            </Link>
+                                            <div className="flex items-center justify-end space-x-3">
+                                                {user?.role === 'admin' && (
+                                                    <button
+                                                        onClick={() => handleHideProblem(problem.slug)}
+                                                        className={`p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${problem.isHidden
+                                                                ? 'text-yellow-500 bg-yellow-400/10 hover:bg-yellow-400/20'
+                                                                : 'text-gray-500 hover:text-red-400 hover:bg-red-400/10'
+                                                            }`}
+                                                        title={problem.isHidden ? "Unhide Problem" : "Hide Problem"}
+                                                    >
+                                                        {problem.isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                    </button>
+                                                )}
+                                                <Link
+                                                    to={`/problems/${problem.slug}`}
+                                                    className="inline-flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <span>Solve</span>
+                                                    <ArrowRight size={14} />
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -285,8 +317,8 @@ const Problems = () => {
                                             key={i + 1}
                                             onClick={() => setPage(i + 1)}
                                             className={`w-8 h-8 rounded-lg text-sm font-medium transition ${page === i + 1
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                                 }`}
                                         >
                                             {i + 1}
