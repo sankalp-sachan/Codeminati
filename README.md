@@ -109,13 +109,13 @@ Whether you're organizing a university tech fest or a corporate hiring challenge
 
 ---
 
-## 📸 Screenshots
+<!-- ## 📸 Screenshots
 
 | Dashboard | Contest Page | Leaderboard |
 | :---: | :---: | :---: |
 | ![Dashboard Placeholder](https://via.placeholder.com/300x200?text=Dashboard) | ![Contest Placeholder](https://via.placeholder.com/300x200?text=Contest+UI) | ![Leaderboard Placeholder](https://via.placeholder.com/300x200?text=Real-time+Leaderboard) |
 
----
+--- -->
 
 ## 🤝 Contributing
 
