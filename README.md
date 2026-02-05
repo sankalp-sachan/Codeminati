@@ -5,64 +5,56 @@
 </p>
 
 <p align="center">
-  <strong>A Real-Time DSA Contest & Hackathon Hosting Platform</strong>
+  <strong>Real-Time DSA Contest, Hackathon & Competitive Programming Platform</strong>
 </p>
 
 <p align="center">
-  Built for Universities • Tech Fests • Coding Clubs • Hiring Challenges
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white" />
+  Designed for Universities • Tech Fests • Coding Clubs • Hiring Challenges
 </p>
 
 ---
 
-## 🚀 What is Codeminati?
+## 🚀 About Codeminati
 
-Codeminati is a production-grade competitive programming platform designed to conduct **live coding contests, private hackathons, and DSA practice** in a secure, real-time environment.
+Codeminati is a full-stack competitive programming and hackathon hosting platform engineered to simulate real contest environments with live leaderboards, secure code execution, and strict role-based control.
 
-It replicates the experience of professional coding platforms while giving organizers complete control over participants, problems, and performance tracking.
+It enables organizers to conduct professional coding events while allowing participants to compete in a seamless, real-time environment.
 
 ---
 
 ## 🧠 Core Principle
 
-> A problem solved during a contest or hackathon is **never** marked as solved in the global problem set.
+> Problems solved during contests or hackathons are never marked as solved in the global practice section.
 
-This guarantees:
+This ensures:
 - Fair competition
-- Accurate leaderboards
-- No practice data leakage
+- Accurate rankings
+- Isolation between practice and competition data
 - True contest integrity
 
 ---
 
-## ✨ Platform Highlights
+## ✨ Platform Capabilities
 
-### 👥 Role-Based Access
+### 👥 Role-Based System
 
-| Role | Capabilities |
-|------|--------------|
-| Admin | Manage contests, problems, users, analytics |
-| Judge | Monitor submissions, validate problems |
-| Volunteer / Assistant | Support participants in real time |
-| User | Participate, code, compete, track rank |
+| Role | Responsibility |
+|------|----------------|
+| Admin | Complete control over contests, problems, users, analytics |
+| Judge | Validate problems and monitor submissions |
+| Volunteer / Assistant | Support participants during live events |
+| User | Participate in contests, solve problems, track ranking |
 
 ---
 
-### 💻 Competitive Environment
+### 💻 Competitive Coding Environment
 
 - Monaco powered online code editor
 - Multi-language support with syntax highlighting
 - Real-time contest timer and announcements
-- Dynamic leaderboard updates using Socket.io
-- Secure code execution with verdict system
-- Anti-cheat session monitoring
+- Live leaderboard updates using Socket.io
+- Secure judge engine with verdict system
+- Anti-cheat monitoring during contests
 
 ---
 
@@ -71,15 +63,15 @@ This guarantees:
 - Email OTP verification
 - Google OAuth login
 - JWT based authentication
-- Protected routes and rate limiting
+- Protected APIs and rate limiting
 
 ---
 
-### 📊 Analytics & Insights
+### 📊 Analytics
 
-- Visual performance charts
-- Submission history tracking
-- Contest and leaderboard analytics
+- Performance charts and submission history
+- Contest analytics for organizers
+- Leaderboard tracking
 
 ---
 
@@ -92,12 +84,12 @@ Express Backend API
       ↓
 MongoDB Database
       ↓
-Judge Engine + Socket.io (Real-time)
+Judge Engine + Real-time Socket Communication
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 **Frontend**
 - React (Vite)
@@ -116,41 +108,25 @@ Judge Engine + Socket.io (Real-time)
 
 ---
 
-## 🧪 How the Judge Works
+## 🎯 Use Cases
 
-1. User submits code
-2. Code runs against hidden test cases
-3. Output is verified
-4. Verdict is stored
-5. Leaderboard updates instantly during contests
-
----
-
-## 🎯 Ideal Use Cases
-
-Codeminati is perfect for:
+Codeminati is built to power:
 
 - University Tech Fests
-- Coding Clubs
-- Placement Cells
+- Coding Competitions
 - Hiring Challenges
 - Private Hackathons
 - Weekly DSA Contests
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome. Fork the repository, make improvements, and open a pull request.
+- Coding Club Events
 
 ---
 
 ## ⚖️ License
 
-ISC License
+This project is proprietary and not open-source.
 
 ---
 
 <p align="center">
-Made with ❤️ by Sankalp Sachan
+Built and maintained by Sankalp Sachan
 </p>
