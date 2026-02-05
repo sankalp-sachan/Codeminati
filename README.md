@@ -1,7 +1,7 @@
 # <p align="center">🕵️‍♂️ Codeminati</p>
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" width="100%" />
+  <img src="banner.png" width="100%" />
 </p>
 
 <p align="center">
