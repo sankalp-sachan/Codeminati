@@ -1097,48 +1097,51 @@ const ContestProblem = () => {
                                                     )}
 
                                                     <div className="space-y-3">
-                                                        {testResults.map((result, i) => (
-                                                            <div key={i} className="bg-[#262626] rounded-lg border border-gray-700 overflow-hidden">
-                                                                <div className="flex items-center justify-between px-4 py-2 bg-black/20">
-                                                                    <span className="font-medium text-gray-300 text-sm">TestCase {i + 1}</span>
-                                                                    <span className={`text-xs px-2 py-0.5 rounded ${result.passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                                                                        }`}>
-                                                                        {result.passed ? 'Passed' : 'Failed'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="p-3 space-y-2">
-                                                                    {!result.passed && result.error ? (
-                                                                        <div className="text-red-400 font-mono text-sm bg-red-900/10 p-2 rounded">
-                                                                            {result.error}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="grid grid-cols-2 gap-4">
-                                                                                <div>
-                                                                                    <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Input</span>
-                                                                                    <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
-                                                                                        {result.input}
+                                                        {testResults.map((result, i) => {
+                                                            const isPassed = result.status === 'Passed' || result.status === 'Accepted';
+                                                            return (
+                                                                <div key={i} className="bg-[#262626] rounded-lg border border-gray-700 overflow-hidden">
+                                                                    <div className="flex items-center justify-between px-4 py-2 bg-black/20">
+                                                                        <span className="font-medium text-gray-300 text-sm">TestCase {i + 1}</span>
+                                                                        <span className={`text-xs px-2 py-0.5 rounded ${isPassed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                                                            }`}>
+                                                                            {isPassed ? 'Passed' : 'Failed'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="p-3 space-y-2">
+                                                                        {!isPassed && result.error ? (
+                                                                            <div className="text-red-400 font-mono text-sm bg-red-900/10 p-2 rounded">
+                                                                                {result.error}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <>
+                                                                                <div className="grid grid-cols-2 gap-4">
+                                                                                    <div>
+                                                                                        <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Input</span>
+                                                                                        <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
+                                                                                            {result.input}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Expected Output</span>
+                                                                                        <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
+                                                                                            {result.expected}
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div>
-                                                                                    <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Expected Output</span>
-                                                                                    <div className="bg-[#1e1e1e] p-2 rounded font-mono text-sm text-gray-300 overflow-x-auto">
-                                                                                        {result.expectedOutput}
+                                                                                    <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Output</span>
+                                                                                    <div className={`bg-[#1e1e1e] p-2 rounded font-mono text-sm overflow-x-auto ${isPassed ? 'text-green-300' : 'text-red-300'
+                                                                                        }`}>
+                                                                                        {result.output}
                                                                                     </div>
                                                                                 </div>
-                                                                            </div>
-                                                                            <div>
-                                                                                <span className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Output</span>
-                                                                                <div className={`bg-[#1e1e1e] p-2 rounded font-mono text-sm overflow-x-auto ${result.passed ? 'text-green-300' : 'text-red-300'
-                                                                                    }`}>
-                                                                                    {result.actualOutput}
-                                                                                </div>
-                                                                            </div>
-                                                                        </>
-                                                                    )}
+                                                                            </>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}

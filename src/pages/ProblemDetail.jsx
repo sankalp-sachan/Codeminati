@@ -1093,7 +1093,7 @@ const ProblemDetail = () => {
                                                                             : 'bg-transparent text-gray-500 hover:bg-gray-800'
                                                                             }`}
                                                                     >
-                                                                        <div className={`w-1.5 h-1.5 rounded-full ${res.status === 'Passed' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                                                        <div className={`w-1.5 h-1.5 rounded-full ${res.status === 'Passed' || res.status === 'Accepted' ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                                                         <span>Case {index + 1}</span>
                                                                     </button>
                                                                 ))}

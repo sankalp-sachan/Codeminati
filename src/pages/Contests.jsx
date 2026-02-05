@@ -230,9 +230,9 @@ const Contests = () => {
                                                 ) : (
                                                     <Link
                                                         to={`/contests/${contest._id}`}
-                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 transition"
+                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-blue-600/20 text-blue-400 border border-blue-500/50 hover:bg-blue-600/30 transition"
                                                     >
-                                                        Access Denied
+                                                        Details / Register
                                                     </Link>
                                                 )
                                             ) : status === 'upcoming' ? (
