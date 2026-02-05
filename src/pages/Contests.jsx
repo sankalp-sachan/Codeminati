@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
 import { format } from 'date-fns';
-import { Trophy, Bell, CheckCircle, Plus, Calendar, Clock, BookOpen, X, Loader2 } from 'lucide-react';
+import { Trophy, Bell, CheckCircle, Plus, Calendar, Clock, BookOpen, X, Loader2, Search, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
@@ -17,6 +17,7 @@ const Contests = () => {
     const [attemptModal, setAttemptModal] = useState({ show: false, contest: null });
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [allProblems, setAllProblems] = useState([]);
+    const [problemSearch, setProblemSearch] = useState('');
     const [creating, setCreating] = useState(false);
 
     // Create Contest Form State
@@ -73,7 +74,7 @@ const Contests = () => {
 
     const fetchProblems = async () => {
         try {
-            const { data } = await client.get('/problems');
+            const { data } = await client.get('/problems?limit=1000');
             // Check if data is an array or has a problems property
             const problemsArray = Array.isArray(data) ? data : data.problems || [];
             setAllProblems(problemsArray);
@@ -442,31 +443,61 @@ const Contests = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center gap-1">
-                                            <BookOpen size={14} /> Select Problems ({newContest.problems.length} selected)
+                                        <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center justify-between">
+                                            <div className="flex items-center gap-1">
+                                                <BookOpen size={14} /> Select Problems ({newContest.problems.length} selected)
+                                            </div>
+                                            <div className="relative">
+                                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search problems..."
+                                                    className="bg-gray-800 border border-gray-700 rounded-md pl-8 pr-3 py-1 text-xs text-white focus:border-purple-500 outline-none w-48"
+                                                    value={problemSearch}
+                                                    onChange={(e) => setProblemSearch(e.target.value)}
+                                                />
+                                            </div>
                                         </label>
-                                        <div className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-3 h-48 overflow-y-auto space-y-2">
+                                        <div className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-3 h-64 overflow-y-auto space-y-2">
                                             {allProblems.length === 0 ? (
                                                 <div className="text-gray-500 text-center py-10">No problems available</div>
                                             ) : (
-                                                allProblems.map(p => (
-                                                    <div
-                                                        key={p._id}
-                                                        onClick={() => toggleProblemSelection(p._id)}
-                                                        className={`p-3 rounded-lg border cursor-pointer flex justify-between items-center transition-all ${newContest.problems.includes(p._id)
-                                                            ? 'bg-purple-600/20 border-purple-500 text-white'
-                                                            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
-                                                            }`}
-                                                    >
-                                                        <div>
-                                                            <div className="text-sm font-bold">{p.title}</div>
-                                                            <div className="text-[10px] uppercase font-bold text-gray-500">{p.difficulty}</div>
+                                                allProblems
+                                                    .filter(p =>
+                                                        p.title.toLowerCase().includes(problemSearch.toLowerCase()) ||
+                                                        p.difficulty.toLowerCase().includes(problemSearch.toLowerCase()) ||
+                                                        (p.isHidden && 'hidden'.includes(problemSearch.toLowerCase()))
+                                                    )
+                                                    .map(p => (
+                                                        <div
+                                                            key={p._id}
+                                                            onClick={() => toggleProblemSelection(p._id)}
+                                                            className={`p-3 rounded-lg border cursor-pointer flex justify-between items-center transition-all ${newContest.problems.includes(p._id)
+                                                                ? 'bg-purple-600/20 border-purple-500 text-white'
+                                                                : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                                                                }`}
+                                                        >
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-bold">{p.title}</span>
+                                                                    {p.isHidden && (
+                                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 text-[9px] font-black tracking-widest uppercase border border-red-500/20">
+                                                                            <EyeOff size={8} /> HIDDEN
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className={`text-[10px] uppercase font-bold ${p.difficulty === 'Easy' ? 'text-green-500' :
+                                                                    p.difficulty === 'Hard' ? 'text-red-500' :
+                                                                        'text-yellow-500'
+                                                                    }`}>
+                                                                    {p.difficulty}
+                                                                </div>
+                                                            </div>
+                                                            {newContest.problems.includes(p._id) && (
+                                                                <CheckCircle size={16} className="text-purple-400" />
+                                                            )}
                                                         </div>
-                                                        {newContest.problems.includes(p._id) && (
-                                                            <CheckCircle size={16} className="text-purple-400" />
-                                                        )}
-                                                    </div>
-                                                ))
+                                                    ))
                                             )}
                                         </div>
                                     </div>

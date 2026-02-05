@@ -276,6 +276,18 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleDeleteContest = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this contest? This action cannot be undone.')) return;
+        try {
+            await client.delete(`/contests/${id}`);
+            toast.success('Contest deleted successfully');
+            fetchContests();
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Failed to delete contest');
+        }
+    };
+
 
     if (!user || (user.role !== 'admin' && user.role !== 'assistant')) {
         return <div className="p-10 text-center text-red-500">Access Denied. Admins and Assistants Only.</div>;
@@ -1256,18 +1268,27 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="py-6 px-8 text-right">
-                                                        <button
-                                                            onClick={() => handleTogglePublish(c._id)}
-                                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ml-auto ${c.resultsPublished
-                                                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-900/20'
-                                                                : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-amber-500/50 hover:text-white'}`}
-                                                        >
-                                                            {c.resultsPublished ? (
-                                                                <><Eye size={14} /><span>Published</span></>
-                                                            ) : (
-                                                                <><EyeOff size={14} /><span>Publish Results</span></>
-                                                            )}
-                                                        </button>
+                                                        <div className="flex items-center justify-end gap-3">
+                                                            <button
+                                                                onClick={() => handleTogglePublish(c._id)}
+                                                                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${c.resultsPublished
+                                                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-900/20'
+                                                                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-amber-500/50 hover:text-white'}`}
+                                                            >
+                                                                {c.resultsPublished ? (
+                                                                    <><Eye size={14} /><span>Published</span></>
+                                                                ) : (
+                                                                    <><EyeOff size={14} /><span>Publish Results</span></>
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteContest(c._id)}
+                                                                className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl transition-all"
+                                                                title="Delete Contest"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
