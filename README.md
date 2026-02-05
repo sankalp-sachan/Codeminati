@@ -128,5 +128,5 @@ This project is proprietary and not open-source.
 ---
 
 <p align="center">
-Built and maintained by Sankalp Sachan
+Built and maintained by Sankalp Sachan ❤️
 </p>
