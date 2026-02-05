@@ -210,7 +210,7 @@ const AdminDashboard = () => {
             fetchApprovals();
         } catch (error) {
             console.error(error);
-            toast.error('Failed to update request');
+            toast.error(error.response?.data?.message || 'Failed to update request');
         }
     };
 
@@ -620,11 +620,18 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="py-6 px-8">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-                                                            <span className="text-sm font-bold text-gray-300 uppercase tracking-tighter">
-                                                                {req.contest?.title || 'Unknown Contest'}
-                                                            </span>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`h-2 w-2 rounded-full ${new Date() >= new Date(req.contest?.startTime) ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`} />
+                                                                <span className="text-sm font-bold text-gray-300 uppercase tracking-tighter">
+                                                                    {req.contest?.title || 'Unknown Contest'}
+                                                                </span>
+                                                            </div>
+                                                            {new Date() >= new Date(req.contest?.startTime) && (
+                                                                <span className="text-[10px] text-red-500 font-black uppercase tracking-widest">
+                                                                    ⚠️ Contest Started - Approval Blocked
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="py-6 px-8">
@@ -642,14 +649,16 @@ const AdminDashboard = () => {
                                                                     onClick={() => handleApproval(req._id, 'rejected')}
                                                                     className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                                                 >
-                                                                    Dismiss
+                                                                    {new Date() >= new Date(req.contest?.startTime) ? 'Clear Late Request' : 'Dismiss'}
                                                                 </button>
-                                                                <button
-                                                                    onClick={() => handleApproval(req._id, 'approved')}
-                                                                    className="px-6 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-900/20 transition-all transform active:scale-95"
-                                                                >
-                                                                    Grant Access
-                                                                </button>
+                                                                {new Date() < new Date(req.contest?.startTime) && (
+                                                                    <button
+                                                                        onClick={() => handleApproval(req._id, 'approved')}
+                                                                        className="px-6 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-900/20 transition-all transform active:scale-95"
+                                                                    >
+                                                                        Grant Access
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         ) : (
                                                             <span className="text-xs text-gray-500">Action Unavailable</span>

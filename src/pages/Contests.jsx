@@ -131,11 +131,9 @@ const Contests = () => {
         const now = new Date();
         const start = new Date(contest.startTime);
         const end = new Date(contest.endTime);
-        const diffMinutes = (start - now) / (1000 * 60);
 
         if (activeTab === 'active') return now >= start && now <= end;
-        if (activeTab === 'checkin') return diffMinutes > 0 && diffMinutes <= 10;
-        if (activeTab === 'upcoming') return diffMinutes > 10;
+        if (activeTab === 'upcoming') return now < start;
         if (activeTab === 'ended') return now > end;
         return true;
     });
@@ -177,7 +175,7 @@ const Contests = () => {
 
                     {/* Tabs */}
                     <div className="flex space-x-1 bg-gray-800/50 p-1 rounded-lg mb-6 w-fit border border-gray-700">
-                        {['active', 'checkin', 'upcoming', 'ended'].map((tab) => (
+                        {['active', 'upcoming', 'ended'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -186,7 +184,7 @@ const Contests = () => {
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                {tab === 'checkin' ? 'Check-In' : tab}
+                                {tab}
                             </button>
                         ))}
                     </div>
@@ -194,7 +192,7 @@ const Contests = () => {
                     <div className="grid grid-cols-1 gap-6">
                         {filteredContests.length === 0 ? (
                             <div className="text-gray-500 text-center py-10 bg-gray-800/30 rounded-xl">
-                                No {activeTab === 'checkin' ? 'check-in open' : activeTab} contests found.
+                                No {activeTab} contests found.
                             </div>
                         ) : (
                             filteredContests.map(contest => {
@@ -205,16 +203,13 @@ const Contests = () => {
                                 if (now >= start && now <= end) status = 'active';
                                 if (now > end) status = 'ended';
 
-                                const diffMinutes = (start - now) / (1000 * 60);
-                                if (diffMinutes > 0 && diffMinutes <= 10) status = 'Check-In Open';
-
                                 const isRegistered = contest.participants?.includes(currentUser?._id);
 
                                 return (
                                     <div key={contest._id} className="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 transition duration-300">
                                         <div className="flex justify-between items-start mb-2">
                                             <h2 className="text-xl font-semibold text-white">{contest.title}</h2>
-                                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase border ${getStatusColor(status === 'Check-In Open' ? 'upcoming' : status)}`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase border ${getStatusColor(status)}`}>
                                                 {status}
                                             </span>
                                         </div>
@@ -232,57 +227,30 @@ const Contests = () => {
                                                     >
                                                         Attempt
                                                     </button>
-                                                ) : contest.myStatus === 'pending' ? (
-                                                    <span className="px-6 py-2 rounded-lg font-medium bg-orange-500/20 text-orange-400 border border-orange-500/50 cursor-default">
-                                                        Pending Approval ⏳
-                                                    </span>
-                                                ) : contest.myStatus === 'rejected' ? (
-                                                    <span className="px-6 py-2 rounded-lg font-medium bg-red-500/20 text-red-400 border border-red-500/50 cursor-default">
-                                                        Access Denied ❌
-                                                    </span>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => setAttemptModal({ show: true, contest })}
-                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700 transition"
+                                                    <Link
+                                                        to={`/contests/${contest._id}`}
+                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 transition"
                                                     >
-                                                        Attempt
-                                                    </button>
+                                                        Access Denied
+                                                    </Link>
                                                 )
-                                            ) : status === 'Check-In Open' ? (
+                                            ) : status === 'upcoming' ? (
                                                 contest.myStatus === 'approved' ? (
                                                     <span className="px-6 py-2 rounded-lg font-medium bg-green-500/20 text-green-400 border border-green-500/50 cursor-default">
-                                                        Approved & Ready 🚀
+                                                        Approved & Ready
                                                     </span>
                                                 ) : contest.myStatus === 'pending' ? (
                                                     <span className="px-6 py-2 rounded-lg font-medium bg-orange-500/20 text-orange-400 border border-orange-500/50 cursor-default">
-                                                        Request Pending...
+                                                        Pending Approval
                                                     </span>
                                                 ) : (
                                                     <Link
                                                         to={`/contests/${contest._id}`}
-                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition animate-pulse"
+                                                        className="inline-block px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition"
                                                     >
-                                                        Enter to Request Access
+                                                        Request Approval
                                                     </Link>
-                                                )
-                                            ) : status === 'upcoming' ? (
-                                                isRegistered ? (
-                                                    <button disabled className="px-6 py-2 rounded-lg font-medium bg-green-500/20 text-green-400 border border-green-500/50 cursor-default">
-                                                        Registered ✅
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleNotifyClick(contest)}
-                                                        disabled={isRegistering === contest._id}
-                                                        className={`px-6 py-2 rounded-lg font-medium bg-gray-700 text-gray-200 hover:bg-gray-600 flex items-center gap-2 transition ${isRegistering === contest._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                    >
-                                                        {isRegistering === contest._id ? (
-                                                            <Loader2 size={18} className="animate-spin" />
-                                                        ) : (
-                                                            <Bell size={18} />
-                                                        )}
-                                                        {isRegistering === contest._id ? 'Registering...' : 'Notify Me'}
-                                                    </button>
                                                 )
                                             ) : (
                                                 <Link

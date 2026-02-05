@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import { User, Calendar, Edit2, Save, X, Code, Coins } from 'lucide-react';
+import { User, Calendar, Edit2, Save, X, Code, Coins, Phone } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
 
@@ -21,7 +21,8 @@ const Profile = () => {
                 setFormData({
                     name: data.name,
                     bio: data.bio || '',
-                    preferredLanguage: data.preferredLanguage || 'python'
+                    preferredLanguage: data.preferredLanguage || 'python',
+                    whatsappNumber: data.whatsappNumber || ''
                 });
                 updateUser(data); // Sync global context
             } catch (error) {
@@ -243,6 +244,22 @@ const Profile = () => {
                             </div>
 
 
+
+                            <div className="flex items-center text-gray-300">
+                                <Phone className="h-4 w-4 mr-3 text-gray-500" />
+                                {isEditing ? (
+                                    <input
+                                        type="tel"
+                                        name="whatsappNumber"
+                                        value={formData.whatsappNumber}
+                                        onChange={handleInputChange}
+                                        className="bg-gray-800 text-white border border-gray-700 rounded px-2 py-1 w-full text-sm"
+                                        placeholder="WhatsApp Number"
+                                    />
+                                ) : (
+                                    <span className="text-sm">{profileData.whatsappNumber || "Not provided"}</span>
+                                )}
+                            </div>
 
                             <div className="flex items-center text-gray-300">
                                 <Calendar className="h-4 w-4 mr-3 text-gray-500" />

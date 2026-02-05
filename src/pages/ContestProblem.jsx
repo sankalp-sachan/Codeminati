@@ -205,19 +205,21 @@ const ContestProblem = () => {
         if (!contestEndTime) return;
 
         const interval = setInterval(() => {
-            const now = new Date();
-            const diff = contestEndTime - now;
+            const now = new Date().getTime();
 
-            if (diff <= 0) {
-                setTimeLeft('00:00:00');
+            // Global Timer
+            const end = new Date(contestEndTime).getTime();
+            const distance = end - now;
+
+            if (distance < 0) {
+                setTimeLeft("Ended");
                 setIsContestEnded(true);
-                clearInterval(interval);
-                toast.error('Contest Ended! Submissions disabled.');
             } else {
-                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                const m = Math.floor((diff / (1000 * 60)) % 60);
-                const s = Math.floor((diff / 1000) % 60);
-                setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                setTimeLeft(`${days > 0 ? days + "d " : ""}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
             }
         }, 1000);
 
@@ -715,9 +717,14 @@ const ContestProblem = () => {
                     <div className="flex flex-col items-center">
                         <div className="flex items-center space-x-3">
                             <h1 className="text-base font-bold text-white tracking-tight">{problem.title}</h1>
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                Contest Mode
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {timeLeft && (
+                                    <div className={`px-2 py-0.5 rounded font-mono text-[11px] font-bold flex items-center gap-1.5 border ${timeLeft === "Ended" ? 'bg-red-500/10 border-red-500/50 text-red-500' : 'bg-gray-800 border-gray-700 text-gray-400'}`}>
+                                        <Clock size={12} />
+                                        {timeLeft} (End)
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="flex items-center space-x-3 mt-1">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${problem.difficulty === 'Easy' ? 'border-green-500/50 text-green-400 bg-green-500/5' :
@@ -927,10 +934,18 @@ const ContestProblem = () => {
                             {/* Editor */}
                             <div className="flex flex-col" style={{ height: `${editorHeight}%` }}>
                                 <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-[#1e1e1e]/50">
-                                    <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                        Code Editor
-                                    </span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                            Code Editor
+                                        </span>
+                                        {timeLeft && (
+                                            <div className={`px-2 py-0.5 rounded font-mono text-[10px] font-black flex items-center gap-1.5 border ${timeLeft === "Ended" ? 'bg-red-500/10 border-red-500/50 text-red-500' : 'bg-blue-500/10 border-blue-500/50 text-blue-400'}`}>
+                                                <Clock size={10} />
+                                                Time Left: {timeLeft}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex items-center space-x-2">
                                         <button
                                             onClick={() => toggleFullScreen('compiler')}

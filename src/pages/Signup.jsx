@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, ArrowRight, Briefcase, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Briefcase, Loader2, Phone } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const Signup = () => {
@@ -10,6 +10,7 @@ const Signup = () => {
         username: '',
         email: '',
         password: '',
+        whatsappNumber: '',
         role: 'user'
     });
     const [loading, setLoading] = useState(false);
@@ -107,6 +108,21 @@ const Signup = () => {
                     </div>
 
                     <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">WhatsApp Number</label>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="tel"
+                                value={formData.whatsappNumber}
+                                onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                                className="w-full bg-white/5 border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                                placeholder="+91 1234567890"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-300">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -147,12 +163,12 @@ const Signup = () => {
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-gray-700"></div>
                         </div>
-                        <div className="relative flex justify-center text-sm">
+                        {/* <div className="relative flex justify-center text-sm">
                             <span className="px-2 bg-[#1e293b] text-gray-400 bg-opacity-100 backdrop-blur-xl">Or continue with</span>
-                        </div>
+                        </div> */}
                     </div>
 
-                    <div className="mt-6 flex justify-center">
+                    {/* <div className="mt-6 flex justify-center">
                         <button
                             onClick={() => loginWithGoogle()}
                             className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-100 text-gray-800 font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02]"
@@ -177,7 +193,7 @@ const Signup = () => {
                             </svg>
                             <span>Sign up with Google</span>
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 <p className="mt-6 text-center text-sm text-gray-400">

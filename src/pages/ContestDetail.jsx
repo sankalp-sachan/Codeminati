@@ -12,7 +12,6 @@ const ContestDetail = () => {
     const [contest, setContest] = useState(null);
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState(null);
-    const [personalTimeLeft, setPersonalTimeLeft] = useState(null);
     const [requesting, setRequesting] = useState(false);
 
     useEffect(() => {
@@ -50,22 +49,6 @@ const ContestDetail = () => {
                 setTimeLeft(`${days > 0 ? days + "d " : ""}${hours}h ${minutes}m ${seconds}s`);
             }
 
-            // Personal Timer (60 mins from start)
-            if (contest.userStatus?.startedAt) {
-                const startedAt = new Date(contest.userStatus.startedAt).getTime();
-                const personalEnd = startedAt + (60 * 60 * 1000); // 60 minutes
-                const personalDist = personalEnd - now;
-
-                if (personalDist < 0) {
-                    setPersonalTimeLeft("00:00:00");
-                } else {
-                    const pHours = Math.floor((personalDist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const pMinutes = Math.floor((personalDist % (1000 * 60 * 60)) / (1000 * 60));
-                    const pSeconds = Math.floor((personalDist % (1000 * 60)) / 1000);
-                    setPersonalTimeLeft(`${pHours.toString().padStart(2, '0')}:${pMinutes.toString().padStart(2, '0')}:${pSeconds.toString().padStart(2, '0')}`);
-                }
-            }
-
         }, 1000);
 
         return () => clearInterval(interval);
@@ -74,7 +57,7 @@ const ContestDetail = () => {
     // Prevent Closing Warning
     useEffect(() => {
         const handleBeforeUnload = (e) => {
-            if (contest && !isEnded && personalTimeLeft !== "00:00:00") {
+            if (contest && !isEnded) {
                 const message = "Are you sure you want to leave? Your contest timer is running.";
                 e.preventDefault();
                 e.returnValue = message;
@@ -84,7 +67,7 @@ const ContestDetail = () => {
 
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [contest, timeLeft, personalTimeLeft]);
+    }, [contest, timeLeft]);
 
     if (loading) {
         return (
@@ -99,7 +82,7 @@ const ContestDetail = () => {
         return contest.userStatus?.solvedProblems?.includes(problemId);
     };
 
-    const isEnded = timeLeft === "Ended" || personalTimeLeft === "00:00:00";
+    const isEnded = timeLeft === "Ended";
 
 
 
@@ -124,41 +107,71 @@ const ContestDetail = () => {
 
     // Approval Handlers
     if (contest.accessDenied) {
-        const now = new Date().getTime();
-        const start = new Date(contest.startTime).getTime();
-        const diffMinutes = (start - now) / (1000 * 60);
-        const canRequest = diffMinutes <= 10 && diffMinutes > 0;
+        const approvalStatus = contest.approvalStatus;
+        const now = new Date();
+        const startTime = new Date(contest.startTime);
+        const hasStarted = now >= startTime;
+
+        let title = "Restricted Access";
+        let message = "Access to this contest is currently restricted. You must be approved by an administrator before the contest starts.";
+        let iconColor = "text-orange-500";
+        let bgColor = "bg-orange-500/10";
+
+        if (approvalStatus === 'pending') {
+            title = "Approval Pending";
+            message = "Your request is being reviewed by an administrator. Please check back later.";
+            iconColor = "text-yellow-500";
+            bgColor = "bg-yellow-500/10";
+        } else if (approvalStatus === 'rejected') {
+            title = "Request Rejected";
+            message = "Your request to participate in this contest was rejected. Unfortunately, you cannot enter this contest.";
+            iconColor = "text-red-500";
+            bgColor = "bg-red-500/10";
+        } else if (approvalStatus === 'late_approval') {
+            title = "Late Approval";
+            message = "Your request was approved after the contest started. According to rules, you must be approved BEFORE the start time to participate.";
+            iconColor = "text-red-500";
+            bgColor = "bg-red-500/10";
+        } else if (approvalStatus === 'blocked') {
+            title = "Entry Blocked";
+            message = "You cannot enter this contest because you were not approved by an administrator before the start time.";
+            iconColor = "text-red-500";
+            bgColor = "bg-red-500/10";
+        } else if (hasStarted && (approvalStatus === 'none' || approvalStatus === 'guest')) {
+            title = "Entry Closed";
+            message = "This contest has already started and you did not have a pre-approved request.";
+            iconColor = "text-red-500";
+            bgColor = "bg-red-500/10";
+        }
 
         return (
             <div className="container mx-auto px-4 py-20 text-center max-w-xl">
                 <div className="bg-gray-800/50 p-10 rounded-2xl border border-gray-700 shadow-xl">
-                    <div className="mb-6 inline-flex p-4 rounded-full bg-orange-500/10 border border-orange-500/20">
-                        <Lock className="w-12 h-12 text-orange-500" />
+                    <div className={`mb-6 inline-flex p-4 rounded-full ${bgColor} border border-current`}>
+                        <Lock className={`w-12 h-12 ${iconColor}`} />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-4">
-                        {contest.approvalStatus === 'pending' ? 'Participation Pending' :
-                            contest.approvalStatus === 'rejected' ? 'Access Denied' : 'Restricted Access'}
+                        {title}
                     </h1>
                     <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                        {contest.approvalStatus === 'pending'
-                            ? "You've requested to join this contest. Please wait for the assistant to approve your entry."
-                            : contest.approvalStatus === 'rejected'
-                                ? "Your request to participate in this contest was rejected by the assistant."
-                                : canRequest
-                                    ? "This contest requires check-in. You can request access now!"
-                                    : `Access to this contest is currently restricted. Check-in opens 10 minutes before start.`
-                        }
+                        {message}
                     </p>
 
                     <div className="flex flex-col gap-3">
-                        {(contest.approvalStatus === 'guest' || contest.approvalStatus === 'none') && canRequest && (
+                        {!hasStarted && (approvalStatus === 'none' || approvalStatus === 'guest') && (
                             <button
                                 onClick={handleRequestAccess}
-                                disabled={requesting || contest.approvalStatus === 'pending'}
+                                disabled={requesting}
                                 className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {requesting ? 'Requesting...' : 'Request Early Access'}
+                                {requesting ? 'Requesting...' : 'Request Approval for Contest'}
                             </button>
+                        )}
+
+                        {approvalStatus === 'pending' && !hasStarted && (
+                            <div className="w-full py-4 bg-yellow-600/20 text-yellow-500 border border-yellow-500/30 rounded-xl font-bold">
+                                Approval Pending...
+                            </div>
                         )}
 
                         <button
@@ -208,21 +221,7 @@ const ContestDetail = () => {
                             }
                         `}>
                             <Clock className="w-4 h-4" />
-                            {timeLeft} (End)
-                        </div>
-                    )}
-
-                    {/* Personal Timer */}
-                    {personalTimeLeft && (
-                        <div className={`
-                            px-4 py-1 rounded-full font-mono font-bold flex items-center gap-2 animate-pulse
-                            ${personalTimeLeft === "00:00:00"
-                                ? 'bg-red-500/10 border border-red-500/50 text-red-500'
-                                : 'bg-green-500/10 border border-green-500/50 text-green-400'
-                            }
-                        `}>
-                            <Clock className="w-4 h-4" />
-                            {personalTimeLeft} (You)
+                            {timeLeft}
                         </div>
                     )}
                 </div>
