@@ -1,11 +1,15 @@
 # <p align="center">🕵️‍♂️ Codeminati</p>
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" alt="Codeminati Banner" width="100%">
+  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" width="100%" />
 </p>
 
 <p align="center">
-  <strong>The Ultimate Real-Time DSA Hackathon & Contest Platform</strong>
+  <strong>A Real-Time DSA Contest & Hackathon Hosting Platform</strong>
+</p>
+
+<p align="center">
+  Built for Universities • Tech Fests • Coding Clubs • Hiring Challenges
 </p>
 
 <p align="center">
@@ -18,120 +22,135 @@
 
 ---
 
-## 🚀 Overview
+## 🚀 What is Codeminati?
 
-**Codeminati** is a production-ready, full-stack platform designed for hosting high-stakes coding contests and DSA hackathons. It combines a seamless, low-latency user experience with robust administrative controls, real-time leaderboards, and a secure code execution environment.
+Codeminati is a production-grade competitive programming platform designed to conduct **live coding contests, private hackathons, and DSA practice** in a secure, real-time environment.
 
-Whether you're organizing a university tech fest or a corporate hiring challenge, Codeminati provides all the tools needed to manage participants, problems, and performance metrics in real-time.
-
----
-
-## ✨ Key Features
-
-### 👤 User Roles
--   **Admin**: Full control over contests, problems, users, and platform analytics.
--   **Judge**: Review submissions, manage specific contest problems, and ensure fairness.
--   **Volunteer/Assistant**: Real-time monitoring and participant assistance.
--   **User**: Participate in contests, solve problems, and track progress.
-
-### 💻 Core Functionality
--   **Online Code Editor**: Integrated **Monaco Editor** with support for multiple languages, syntax highlighting, and auto-completion.
--   **Real-Time Contests**: Synchronized timers, live announcements, and dynamic problem unlocking.
--   **Live Leaderboard**: Real-time ranking updates using **Socket.io** for instant competitive feedback.
--   **OTP Authentication**: Secure login with email verification powered by **Nodemailer**.
--   **Google OAuth**: Quick and secure sign-in with Google integration.
--   **Anti-Cheat Measures**: Real-time monitoring and session management to ensure integrity.
--   **Detailed Analytics**: Visualized performance stats using **Recharts**.
+It replicates the experience of professional coding platforms while giving organizers complete control over participants, problems, and performance tracking.
 
 ---
 
-## 🛡️ Tech Stack
+## 🧠 Core Principle
 
-### Frontend
--   **Vite + React 19**: Lightning-fast development and optimized production builds.
--   **Tailwind CSS 4**: Modern, utility-first styling for a sleek, responsive UI.
--   **Framer Motion**: Smooth micro-animations and transitions.
--   **Lucide React**: Beautiful, consistent iconography.
--   **Socket.io Client**: Real-time bi-directional communication.
+> A problem solved during a contest or hackathon is **never** marked as solved in the global problem set.
 
-### Backend
--   **Node.js & Express.js**: Scalable and performant server architecture.
--   **MongoDB & Mongoose**: Flexible document-based data storage.
--   **JWT & Cookie-Parser**: Secure session-based and token-based authentication.
--   **Google Auth Library**: Enterprise-grade OAuth implementation.
--   **Helmet & Rate Limiter**: Enhanced security and protection against brute-force attacks.
+This guarantees:
+- Fair competition
+- Accurate leaderboards
+- No practice data leakage
+- True contest integrity
 
 ---
 
-## 🛠️ Getting Started
+## ✨ Platform Highlights
 
-### Prerequisites
--   Node.js (v18 or higher)
--   MongoDB Atlas or local instance
--   Gmail App Password (for OTP services)
+### 👥 Role-Based Access
 
-### Installation
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/sankalp-sachan/Codeminati.git
-    cd Codeminati
-    ```
-
-2.  **Backend Setup**
-    ```bash
-    cd backend
-    npm install
-    ```
-    Create a `.env` file in the `backend` directory:
-    ```env
-    PORT=5000
-    MONGO_URI=your_mongodb_uri
-    JWT_SECRET=your_secret_key
-    EMAIL_USER=your_email
-    EMAIL_PASS=your_app_password
-    GOOGLE_CLIENT_ID=your_google_client_id
-    ```
-    Start the backend:
-    ```bash
-    npm run dev
-    ```
-
-3.  **Frontend Setup**
-    ```bash
-    cd ../frontend
-    npm install
-    ```
-    Start the frontend:
-    ```bash
-    npm run dev
-    ```
+| Role | Capabilities |
+|------|--------------|
+| Admin | Manage contests, problems, users, analytics |
+| Judge | Monitor submissions, validate problems |
+| Volunteer / Assistant | Support participants in real time |
+| User | Participate, code, compete, track rank |
 
 ---
 
-<!-- ## 📸 Screenshots
+### 💻 Competitive Environment
 
-| Dashboard | Contest Page | Leaderboard |
-| :---: | :---: | :---: |
-| ![Dashboard Placeholder](https://via.placeholder.com/300x200?text=Dashboard) | ![Contest Placeholder](https://via.placeholder.com/300x200?text=Contest+UI) | ![Leaderboard Placeholder](https://via.placeholder.com/300x200?text=Real-time+Leaderboard) |
+- Monaco powered online code editor
+- Multi-language support with syntax highlighting
+- Real-time contest timer and announcements
+- Dynamic leaderboard updates using Socket.io
+- Secure code execution with verdict system
+- Anti-cheat session monitoring
 
---- -->
+---
+
+### 🔐 Authentication & Security
+
+- Email OTP verification
+- Google OAuth login
+- JWT based authentication
+- Protected routes and rate limiting
+
+---
+
+### 📊 Analytics & Insights
+
+- Visual performance charts
+- Submission history tracking
+- Contest and leaderboard analytics
+
+---
+
+## 🏗️ System Architecture
+
+```
+React Frontend
+      ↓
+Express Backend API
+      ↓
+MongoDB Database
+      ↓
+Judge Engine + Socket.io (Real-time)
+```
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend**
+- React (Vite)
+- Tailwind CSS
+- Framer Motion
+- Socket.io Client
+- Recharts
+
+**Backend**
+- Node.js & Express
+- MongoDB & Mongoose
+- JWT Authentication
+- Nodemailer OTP Service
+- Google OAuth
+- Helmet & Rate Limiter
+
+---
+
+## 🧪 How the Judge Works
+
+1. User submits code
+2. Code runs against hidden test cases
+3. Output is verified
+4. Verdict is stored
+5. Leaderboard updates instantly during contests
+
+---
+
+## 🎯 Ideal Use Cases
+
+Codeminati is perfect for:
+
+- University Tech Fests
+- Coding Clubs
+- Placement Cells
+- Hiring Challenges
+- Private Hackathons
+- Weekly DSA Contests
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! If you'd like to improve Codeminati, please follow these steps:
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions are welcome. Fork the repository, make improvements, and open a pull request.
 
 ---
 
 ## ⚖️ License
 
-Distributed under the ISC License. See `LICENSE` for more information.
+ISC License
 
 ---
 
-<p align="center">Made with ❤️ by the Codeminati Team</p>
+<p align="center">
+Made with ❤️ by Sankalp Sachan
+</p>
