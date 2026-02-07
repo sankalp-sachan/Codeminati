@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import { User, Calendar, Edit2, Save, X, Code, Coins, Phone } from 'lucide-react';
+import { User, Calendar, Edit2, Save, X, Code, Coins, Phone, Medal, Trophy, Award } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
 
@@ -297,6 +297,29 @@ const Profile = () => {
 
                 {/* Right Column: Stats & Activity */}
                 <div className="lg:col-span-2 space-y-8">
+
+                    {/* Badges Section */}
+                    {profileData.badges && profileData.badges.length > 0 && (
+                        <div className="glass p-6 rounded-xl border border-gray-800 bg-[#1e1e1e]">
+                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <Medal className="h-5 w-5 text-yellow-500" />
+                                Achievements
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                {profileData.badges.map((badge, index) => (
+                                    <div key={index} className="flex flex-col items-center p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors group">
+                                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                            {badge === 'First Prize' ? <Trophy className="h-6 w-6 text-yellow-400" /> :
+                                                badge === 'Second Position' ? <Medal className="h-6 w-6 text-gray-300" /> :
+                                                    badge === 'Third Position' ? <Medal className="h-6 w-6 text-orange-400" /> :
+                                                        <Award className="h-6 w-6 text-blue-400" />}
+                                        </div>
+                                        <span className="text-sm font-medium text-center text-gray-200">{badge}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

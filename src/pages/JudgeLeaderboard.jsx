@@ -5,6 +5,7 @@ import { Trophy, Clock, Medal, Activity, Search, AlertTriangle, ChevronLeft, Cal
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import Loader from '../components/Loader';
+import { toast } from 'react-hot-toast';
 
 const JudgeLeaderboard = () => {
     const { user } = useAuth();
@@ -321,6 +322,37 @@ const JudgeLeaderboard = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Award Badge Section */}
+                            <div className="mt-8 border-t border-gray-700 pt-8">
+                                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                    <Trophy className="h-5 w-5 text-yellow-500" />
+                                    Award Badge
+                                </h3>
+                                <div className="flex flex-wrap gap-4">
+                                    {['Hackathon Participant', 'First Prize', 'Second Position', 'Third Position'].map((badge) => (
+                                        <button
+                                            key={badge}
+                                            onClick={async () => {
+                                                if (!window.confirm(`Award "${badge}" to ${selectedUser.username}?`)) return;
+                                                try {
+                                                    await client.post(`/admin/users/${selectedUser.userId}/badge`, { badge });
+                                                    toast.success(`Badge "${badge}" awarded successfully!`);
+                                                    // Refresh user details to show new badge if we were displaying it
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast.error('Failed to award badge');
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors flex items-center gap-2"
+                                        >
+                                            <Medal className="h-4 w-4" />
+                                            {badge}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

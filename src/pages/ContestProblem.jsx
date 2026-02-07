@@ -108,7 +108,7 @@ const ContestProblem = () => {
         const fetchProblemAndProgress = async () => {
             try {
                 // 1. Fetch Problem
-                const { data: problemData } = await client.get(`/problems/${slug}`);
+                const { data: problemData } = await client.get(`/problems/${slug}${contestId ? `?contestId=${contestId}` : ''}`);
                 setProblem(problemData);
 
                 // Default initialization
@@ -157,8 +157,9 @@ const ContestProblem = () => {
 
             } catch (error) {
                 console.error(error);
-                setError('Problem not found or could not be loaded.');
-                toast.error('Failed to load problem');
+                const msg = error.response?.data?.message || 'Problem not found or could not be loaded.';
+                setError(msg);
+                toast.error(msg);
             }
         };
         fetchProblemAndProgress();

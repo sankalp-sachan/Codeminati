@@ -147,8 +147,9 @@ const ProblemDetail = () => {
 
             } catch (error) {
                 console.error(error);
-                setError('Problem not found or could not be loaded.');
-                toast.error('Failed to load problem');
+                const msg = error.response?.data?.message || 'Problem not found or could not be loaded.';
+                setError(msg);
+                toast.error(msg);
             }
         };
         fetchProblemAndProgress();
