@@ -147,7 +147,7 @@ const ProblemDetail = () => {
 
             } catch (error) {
                 console.error(error);
-                const msg = error.response?.data?.message || 'Problem not found or could not be loaded.';
+                const msg = error.response?.data?.message || error.message || 'Problem not found or could not be loaded.';
                 setError(msg);
                 toast.error(msg);
             }
@@ -327,7 +327,7 @@ const ProblemDetail = () => {
             }
             setActiveTab('description');
         } catch (error) {
-            toast.error('Submission failed');
+            toast.error(error.response?.data?.message || 'Submission failed');
         } finally {
             setLoading(false);
         }

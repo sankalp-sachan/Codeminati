@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import Loader from '../components/Loader';
 import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const JudgeLeaderboard = () => {
     const { user } = useAuth();
@@ -142,6 +143,39 @@ const JudgeLeaderboard = () => {
     const closeUserModal = () => {
         setSelectedUser(null);
         setUserDetails(null);
+    };
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'info'
+    });
+
+    const closeConfirmModal = () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    };
+
+    const handleAwardBadge = (badge, user) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Award Badge',
+            message: `Are you sure you want to award the badge "${badge}" to ${user.username}?`,
+            type: 'warning',
+            onConfirm: async () => {
+                try {
+                    await client.post(`/admin/users/${user.userId}/badge`, { badge });
+                    toast.success(`Badge "${badge}" awarded successfully!`);
+                    closeConfirmModal();
+                } catch (err) {
+                    console.error(err);
+                    toast.error(err.response?.data?.message || 'Failed to award badge');
+                    closeConfirmModal();
+                }
+            }
+        });
     };
 
     const getRankIcon = (rank) => {
@@ -333,17 +367,7 @@ const JudgeLeaderboard = () => {
                                     {['Hackathon Participant', 'First Prize', 'Second Position', 'Third Position'].map((badge) => (
                                         <button
                                             key={badge}
-                                            onClick={async () => {
-                                                if (!window.confirm(`Award "${badge}" to ${selectedUser.username}?`)) return;
-                                                try {
-                                                    await client.post(`/admin/users/${selectedUser.userId}/badge`, { badge });
-                                                    toast.success(`Badge "${badge}" awarded successfully!`);
-                                                    // Refresh user details to show new badge if we were displaying it
-                                                } catch (err) {
-                                                    console.error(err);
-                                                    toast.error('Failed to award badge');
-                                                }
-                                            }}
+                                            onClick={() => handleAwardBadge(badge, selectedUser)}
                                             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors flex items-center gap-2"
                                         >
                                             <Medal className="h-4 w-4" />
@@ -496,6 +520,17 @@ const JudgeLeaderboard = () => {
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={closeConfirmModal}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText="Yes, Award"
+                cancelText="Cancel"
+            />
         </div>
     );
 };

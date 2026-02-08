@@ -15,9 +15,9 @@ const AdminDashboard = () => {
     const [category, setCategory] = useState('Algorithms');
     const [description, setDescription] = useState('');
     const [starterCode, setStarterCode] = useState({
-        python: "class Solution:\n    def solve(self, args: any) -> any:\n        pass",
-        cpp: "class Solution {\npublic:\n    void solve(vector<int>& args) {\n        \n    }\n};",
-        c: "void solve(int* args, int argsSize) {\n    \n}"
+        python: "class Solution:\n    def solve(self, nums, target):\n        # Write your code here\n        pass",
+        cpp: "class Solution {\npublic:\n    vector<int> solve(vector<int>& nums, int target) {\n        \n    }\n};",
+        c: "int* solve(int* nums, int numsSize, int target, int* returnSize) {\n    \n}"
     });
 
     // Test Case Management
@@ -96,6 +96,17 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '');
+            // If no test cases provided, use examples as test cases
+            let finalTestCases = [...testCasesList];
+            if (finalTestCases.length === 0 && examplesList.length > 0) {
+                finalTestCases = examplesList.map(ex => ({
+                    input: ex.input,
+                    output: ex.output,
+                    isHidden: false
+                }));
+                toast.success('Auto-generated test cases from examples');
+            }
+
             const payload = {
                 title,
                 slug,
@@ -105,7 +116,7 @@ const AdminDashboard = () => {
                 starterCode,
                 examples: examplesList,
                 constraints: constraintsList,
-                testCases: testCasesList,
+                testCases: finalTestCases,
                 source: 'manual'
             };
 
@@ -115,16 +126,16 @@ const AdminDashboard = () => {
             setTitle('');
             setDescription('');
             setStarterCode({
-                python: "class Solution:\n    def solve(self, args: any) -> any:\n        pass",
-                cpp: "class Solution {\npublic:\n    void solve(vector<int>& args) {\n        \n    }\n};",
-                c: "void solve(int* args, int argsSize) {\n    \n}"
+                python: "class Solution:\n    def solve(self, nums, target):\n        # Write your code here\n        pass",
+                cpp: "class Solution {\npublic:\n    vector<int> solve(vector<int>& nums, int target) {\n        \n    }\n};",
+                c: "int* solve(int* nums, int numsSize, int target, int* returnSize) {\n    \n}"
             });
             setExamplesList([]);
             setConstraintsList([]);
             setTestCasesList([]);
         } catch (error) {
             console.error(error);
-            toast.error('Failed to create problem');
+            toast.error(error.response?.data?.message || error.message || 'Failed to create problem');
         }
     };
 

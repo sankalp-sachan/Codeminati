@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Lock, Trophy, Clock } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import Loader from '../components/Loader';
 
 const ContestDetail = () => {
@@ -86,6 +88,18 @@ const ContestDetail = () => {
 
 
 
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'warning'
+    });
+
+    const closeConfirmModal = () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    };
+
     const handleRequestAccess = async () => {
         try {
             setRequesting(true);
@@ -96,10 +110,10 @@ const ContestDetail = () => {
                 approvalStatus: 'pending',
                 userStatus: { ...prev.userStatus, approvalStatus: 'pending' }
             }));
-            alert(data.message); // Simple alert or toast
+            toast.success(data.message);
         } catch (error) {
             console.error(error);
-            alert(error.response?.data?.message || 'Failed to request access');
+            toast.error(error.response?.data?.message || 'Failed to request access');
         } finally {
             setRequesting(false);
         }
@@ -247,16 +261,24 @@ const ContestDetail = () => {
 
                     {!isEnded && !contest.userStatus?.completed && (
                         <button
-                            onClick={async () => {
-                                if (window.confirm("Are you sure you want to finish the contest? You won't be able to submit anymore.")) {
-                                    try {
-                                        await client.post(`/contests/${id}/finish`);
-                                        alert("Contest submitted successfully!");
-                                        window.location.reload();
-                                    } catch (e) {
-                                        alert("Error finishing contest");
+                            onClick={() => {
+                                setConfirmModal({
+                                    isOpen: true,
+                                    title: 'Finish Contest',
+                                    message: "Are you sure you want to finish the contest? You won't be able to submit anymore.",
+                                    type: 'warning',
+                                    onConfirm: async () => {
+                                        try {
+                                            await client.post(`/contests/${id}/finish`);
+                                            toast.success("Contest submitted successfully!");
+                                            closeConfirmModal();
+                                            window.location.reload();
+                                        } catch (e) {
+                                            toast.error("Error finishing contest");
+                                            closeConfirmModal();
+                                        }
                                     }
-                                }
+                                });
                             }}
                             className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg"
                         >
@@ -308,7 +330,18 @@ const ContestDetail = () => {
                     );
                 })}
             </div>
-        </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={closeConfirmModal}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText="Yes, Finish"
+                cancelText="Cancel"
+            />
+        </div >
     );
 };
 
