@@ -364,14 +364,19 @@ const JudgeLeaderboard = () => {
                                     Award Badge
                                 </h3>
                                 <div className="flex flex-wrap gap-4">
-                                    {['Hackathon Participant', 'First Prize', 'Second Position', 'Third Position'].map((badge) => (
+                                    {[
+                                        { label: 'Winner (1st)', filename: '1st.png' },
+                                        { label: 'Runner Up (2nd)', filename: '2nd.png' },
+                                        { label: '3rd Place', filename: '3rd.png' },
+                                        { label: 'Participant', filename: 'participant.png' }
+                                    ].map((badge) => (
                                         <button
-                                            key={badge}
-                                            onClick={() => handleAwardBadge(badge, selectedUser)}
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors flex items-center gap-2"
+                                            key={badge.filename}
+                                            onClick={() => handleAwardBadge(badge.filename, selectedUser)}
+                                            className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-500/30 rounded-lg text-white font-medium transition-all flex items-center gap-2 group"
                                         >
-                                            <Medal className="h-4 w-4" />
-                                            {badge}
+                                            <img src={`/badges/${badge.filename}`} alt="" className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                                            {badge.label}
                                         </button>
                                     ))}
                                 </div>
