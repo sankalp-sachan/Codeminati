@@ -163,12 +163,12 @@ const Signup = () => {
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-gray-700"></div>
                         </div>
-                        {/* <div className="relative flex justify-center text-sm">
+                        <div className="relative flex justify-center text-sm">
                             <span className="px-2 bg-[#1e293b] text-gray-400 bg-opacity-100 backdrop-blur-xl">Or continue with</span>
-                        </div> */}
+                        </div>
                     </div>
 
-                    {/* <div className="mt-6 flex justify-center">
+                    <div className="mt-6 flex justify-center">
                         <button
                             onClick={() => loginWithGoogle()}
                             className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-100 text-gray-800 font-medium py-2.5 rounded-lg transition-all transform hover:scale-[1.02]"
@@ -193,7 +193,7 @@ const Signup = () => {
                             </svg>
                             <span>Sign up with Google</span>
                         </button>
-                    </div> */}
+                    </div>
                 </div>
 
                 <p className="mt-6 text-center text-sm text-gray-400">
