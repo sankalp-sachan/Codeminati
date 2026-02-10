@@ -6,6 +6,7 @@ const client = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 30000, // 30s timeout for server cold starts
 });
 
 

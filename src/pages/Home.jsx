@@ -19,10 +19,10 @@ const Home = () => {
                     <div className="flex justify-center space-x-4">
 
                         <Link
-                            to="/contests"
+                            to="/compiler"
                             className="px-8 py-4 rounded-full bg-primary hover:bg-blue-600 text-white font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-primary/25 flex items-center"
                         >
-                            Enter Hackathon
+                            Start Coding
                             <Trophy className="ml-2 h-5 w-5" />
                         </Link>
                         <Link
