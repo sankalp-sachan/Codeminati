@@ -1,10 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Code2, LogOut, User } from 'lucide-react';
+import { Code2, LogOut, User, Download } from 'lucide-react';
+import { usePWA } from '../hooks/usePWA';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const { isInstallable, install } = usePWA();
 
     const handleLogout = () => {
         logout();
@@ -36,6 +38,17 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        {isInstallable && (
+                            <button
+                                onClick={install}
+                                className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all cursor-pointer border border-green-500/20"
+                                title="Install App"
+                            >
+                                <Download className="h-4 w-4" />
+                                <span className="text-sm font-medium">Install App</span>
+                            </button>
+                        )}
+
                         {user ? (
                             <div className="flex items-center space-x-4">
                                 <Link to="/profile" className="flex items-center space-x-2 text-gray-300 hover:text-white">
@@ -63,9 +76,9 @@ const Navbar = () => {
                             </div>
                         )}
                     </div>
-                </div >
-            </div >
-        </nav >
+                </div>
+            </div>
+        </nav>
     );
 };
 
