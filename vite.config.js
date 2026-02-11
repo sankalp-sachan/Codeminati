@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['codeminati.png', 'logo.png'],
+      includeAssets: ['logo.png'],
       manifest: {
         name: 'Codeminati',
         short_name: 'Codeminati',
