@@ -3,10 +3,12 @@ import Editor from '@monaco-editor/react';
 import { Play, Download, Save, Terminal, FileCode, RotateCcw, Info, Check, AlertTriangle, Copy, X, TerminalSquare } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { io } from 'socket.io-client';
+import { useAuth } from '../context/AuthContext';
 
 const Compiler = () => {
+    const { user } = useAuth();
     const [language, setLanguage] = useState('python');
-    const [code, setCode] = useState('# Write your code here\nname = input("Enter your name: ")\nprint(f"Hello, {name}!")');
+    const [code, setCode] = useState(`# Write your code here\nprint("Hello, ${user?.name || 'Coder'}!")\n`);
     const [terminalLines, setTerminalLines] = useState([]);
     const [currentInput, setCurrentInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -212,8 +214,8 @@ const Compiler = () => {
                             <span
                                 key={idx}
                                 className={`whitespace-pre-wrap break-words ${line.type === 'input' ? 'text-blue-400 font-bold' :
-                                        line.type === 'system' ? 'text-gray-500 italic' :
-                                            line.type === 'error' ? 'text-red-400' : 'text-gray-300'
+                                    line.type === 'system' ? 'text-gray-500 italic' :
+                                        line.type === 'error' ? 'text-red-400' : 'text-gray-300'
                                     }`}
                             >
                                 {line.text}

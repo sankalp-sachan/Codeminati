@@ -79,7 +79,6 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/problems" element={<Problems />} />
-          <Route path="/compiler" element={<Compiler />} />
           <Route path="/contests" element={<Contests />} />
           <Route path="/judge/leaderboard" element={<JudgeLeaderboard />} />
           <Route path="/support" element={<Support />} />
@@ -96,6 +95,7 @@ function AppContent() {
           {/* Protected Routes (Logged In Users) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/compiler" element={<Compiler />} />
             <Route path="/problems/:slug" element={<ProblemDetail />} />
             <Route path="/contests/:id" element={<ContestDetail />} />
             <Route path="/contests/:id/solve/:slug" element={<ContestProblem />} />
