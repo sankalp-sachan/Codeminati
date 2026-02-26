@@ -21,7 +21,8 @@ const Compiler = () => {
         python: '# Write your code here\nname = input("Enter your name: ")\nprint(f"Hello, {name}!")',
         cpp: '#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    string name;\n    cout << "Enter your name: ";\n    cin >> name;\n    cout << "Hello, " << name << "!" << endl;\n    return 0;\n}',
         c: '#include <stdio.h>\n\nint main() {\n    char name[100];\n    printf("Enter your name: ");\n    scanf("%s", name);\n    printf("Hello, %s!\\n", name);\n    return 0;\n}',
-        javascript: 'const readline = require("readline").createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nreadline.question("Enter your name: ", name => {\n  console.log(`Hello, ${name}!`);\n  readline.close();\n});'
+        javascript: 'const readline = require("readline").createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nreadline.question("Enter your name: ", name => {\n  console.log(`Hello, ${name}!`);\n  readline.close();\n});',
+        java: 'import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        System.out.print("Enter your name: ");\n        String name = scanner.nextLine();\n        System.out.println("Hello, " + name + "!");\n    }\n}'
     };
 
     useEffect(() => {
@@ -93,7 +94,7 @@ const Compiler = () => {
     };
 
     const handleSave = () => {
-        const extensions = { python: 'py', cpp: 'cpp', c: 'c', javascript: 'js' };
+        const extensions = { python: 'py', cpp: 'cpp', c: 'c', javascript: 'js', java: 'java' };
         const blob = new Blob([code], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -128,7 +129,8 @@ const Compiler = () => {
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
                         <option value="c">C</option>
-                        {/* <option value="javascript">Node.js</option> */}
+                        <option value="javascript">Node.js</option>
+                        <option value="java">Java</option>
                     </select>
                 </div>
 
