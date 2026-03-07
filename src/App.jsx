@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import client from './api/client';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -27,6 +28,7 @@ import Support from './pages/Support';
 import JudgeLeaderboard from './pages/JudgeLeaderboard';
 import Submissions from './pages/Submissions';
 import Analytics from './pages/Analytics';
+import SplashScreen from './components/SplashScreen';
 
 import { useEffect, useState } from 'react';
 
@@ -61,11 +63,26 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const { user } = useAuth();
-  // Anti-Cheat & Security Logic REMOVED by user request
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem('splashShown');
+  });
+
+  useEffect(() => {
+    if (showSplash) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem('splashShown', 'true');
+      }, 6500); // Increased for the detailed hacker sequence
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
 
 
   return (
     <div className={`min-h-screen bg-[#0f0f15] text-white flex flex-col`}>
+      <AnimatePresence>
+        {showSplash && <SplashScreen key="splash" />}
+      </AnimatePresence>
 
 
       <Routes>
