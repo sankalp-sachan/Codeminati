@@ -19,8 +19,8 @@ const Compiler = () => {
 
     const defaultCodes = {
         python: '# Write your code here\nname = input("Enter your name: ")\nprint(f"Hello, {name}!")',
-        cpp: '#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    string name;\n    cout << "Enter your name: ";\n    cin >> name;\n    cout << "Hello, " << name << "!" << endl;\n    return 0;\n}',
-        c: '#include <stdio.h>\n\nint main() {\n    char name[100];\n    printf("Enter your name: ");\n    scanf("%s", name);\n    printf("Hello, %s!\\n", name);\n    return 0;\n}',
+        cpp: '#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    // Disable buffering for interactive terminal\n    setvbuf(stdout, NULL, _IONBF, 0);\n    \n    string name;\n    cout << "Enter your name: ";\n    cin >> name;\n    cout << "Hello, " << name << "!" << endl;\n    return 0;\n}',
+        c: '#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Disable buffering for interactive terminal\n    setvbuf(stdout, NULL, _IONBF, 0);\n\n    char name[100];\n    printf("Enter your name: ");\n    scanf("%s", name);\n    printf("Hello, %s!\\n", name);\n    return 0;\n}',
         javascript: 'const readline = require("readline").createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nreadline.question("Enter your name: ", name => {\n  console.log(`Hello, ${name}!`);\n  readline.close();\n});',
         java: 'import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        System.out.print("Enter your name: ");\n        String name = scanner.nextLine();\n        System.out.println("Hello, " + name + "!");\n    }\n}'
     };
