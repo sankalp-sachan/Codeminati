@@ -130,8 +130,9 @@ const Compiler = () => {
                         <option value="cpp">C++</option>
                         <option value="c">C</option>
                         <option value="javascript">Node.js</option>
-                        {/* <option value="java">Java</option> */}
+                        <option value="java">Java</option>
                     </select>
+
                 </div>
 
                 <div className="flex items-center space-x-3">
