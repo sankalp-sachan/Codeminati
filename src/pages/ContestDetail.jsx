@@ -36,14 +36,20 @@ const ContestDetail = () => {
 
         const interval = setInterval(() => {
             const now = new Date().getTime();
-
-            // Global Timer
+            const startTime = new Date(contest.startTime).getTime();
             const end = new Date(contest.endTime).getTime();
-            const distance = end - now;
-
-            if (distance < 0) {
+            
+            if (now < startTime) {
+                const diff = startTime - now;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                setTimeLeft(`Starts in: ${days > 0 ? days + "d " : ""}${hours}h ${minutes}m ${seconds}s`);
+            } else if (now > end) {
                 setTimeLeft("Ended");
             } else {
+                const distance = end - now;
                 const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));

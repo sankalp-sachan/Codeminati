@@ -96,10 +96,18 @@ const Contests = () => {
                 return new Date(`${dateString}:00+05:30`).toISOString();
             };
 
+            const startStr = formatDateToIST(newContest.startTime);
+            const endStr = formatDateToIST(newContest.endTime);
+            
+            if (new Date(endStr) <= new Date(startStr)) {
+                setCreating(false);
+                return toast.error("End time must be after start time");
+            }
+
             const payload = {
                 ...newContest,
-                startTime: formatDateToIST(newContest.startTime),
-                endTime: formatDateToIST(newContest.endTime)
+                startTime: startStr,
+                endTime: endStr
             };
 
             await client.post('/contests', payload);
@@ -199,9 +207,11 @@ const Contests = () => {
                                 const now = new Date();
                                 const start = new Date(contest.startTime);
                                 const end = new Date(contest.endTime);
+                                
                                 let status = 'upcoming';
-                                if (now >= start && now <= end) status = 'active';
-                                if (now > end) status = 'ended';
+                                if (now < start) status = 'upcoming';
+                                else if (now <= end) status = 'active';
+                                else status = 'ended';
 
                                 const isRegistered = contest.participants?.includes(currentUser?._id);
 
