@@ -139,204 +139,24 @@ const Problems = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <h1 className="text-3xl font-bold mb-8">All Problems</h1>
-
-            <div className="flex flex-col space-y-4 mb-6">
-                {/* Search Bar */}
-                <div className="relative w-full md:w-1/2">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
-                    <input
-                        type="text"
-                        className="w-full bg-black/20 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                        placeholder="Search problems..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                    />
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-4 flex-wrap">
-                    {/* Status Filters */}
-                    <div className="flex space-x-2 items-center">
-                        {['All', 'Todo', 'Solved', 'Attempted'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => handleStatusChange(status)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedStatus === status
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                    }`}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Difficulty Filters */}
-                    <div className="flex space-x-2 items-center">
-                        {['All', 'Easy', 'Medium', 'Hard'].map(diff => (
-                            <button
-                                key={diff}
-                                onClick={() => handleDifficultyChange(diff)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedDifficulty === diff
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                    }`}
-                            >
-                                {diff}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Category Toggle */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowCategories(!showCategories)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-2 ${selectedCategory !== 'All'
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                        >
-                            <span>{selectedCategory === 'All' ? 'Categories' : selectedCategory}</span>
-                            <ChevronDown className={`w-3 h-3 transition-transform ${showCategories ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {showCategories && (
-                            <div className="absolute top-full left-0 mt-2 w-64 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl z-50 p-2 grid grid-cols-2 gap-1">
-                                {categories.map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => { handleCategoryChange(cat); setShowCategories(false); }}
-                                        className={`px-3 py-2 rounded-lg text-[10px] text-left uppercase font-bold tracking-tighter transition-colors ${selectedCategory === cat
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50'
-                                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-                                            }`}
-                                    >
-                                        {cat}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
+            <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-30 animate-pulse"></div>
+                <div className="relative bg-gray-900/80 backdrop-blur-xl border border-gray-800 p-8 rounded-full inline-block mb-8 shadow-2xl">
+                    <CheckCircle size={56} className="text-blue-400" />
                 </div>
             </div>
-
-            {loading ? (
-                <div className="flex items-center justify-center py-20">
-                    <Loader size="xl" />
-                </div>
-            ) : (
-                <div className="bg-gray-950/40 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-sm">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-800/50 text-xs font-bold text-gray-500 uppercase tracking-widest px-6 py-3">
-                                <th className="px-6 py-4">#</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Title</th>
-                                <th className="px-6 py-4">Difficulty</th>
-                                <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-800">
-                            {problems.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-10 text-center text-gray-500 font-medium">No problems match your criteria.</td>
-                                </tr>
-                            ) : (
-                                problems.map((problem, index) => (
-                                    <tr key={problem._id} className="hover:bg-white/5 transition-colors group">
-                                        <td className="px-6 py-4 text-gray-500 font-mono text-sm">
-                                            {problem.problemNumber || (page - 1) * 20 + index + 1}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {getStatusIcon(problem.status)}
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-white">
-                                            <Link
-                                                to={`/problems/${problem.slug}`}
-                                                className="hover:text-blue-400 transition"
-                                            >
-                                                {problem.title}
-                                            </Link>
-                                        </td>
-                                        <td className={`px-6 py-4 text-sm font-semibold ${getDifficultyColor(problem.difficulty)}`}>
-                                            {problem.difficulty}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                                {problem.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end space-x-3">
-                                                {user?.role === 'admin' && (
-                                                    <button
-                                                        onClick={() => handleHideProblem(problem.slug)}
-                                                        className={`p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${problem.isHidden
-                                                                ? 'text-yellow-500 bg-yellow-400/10 hover:bg-yellow-400/20'
-                                                                : 'text-gray-500 hover:text-red-400 hover:bg-red-400/10'
-                                                            }`}
-                                                        title={problem.isHidden ? "Unhide Problem" : "Hide Problem"}
-                                                    >
-                                                        {problem.isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
-                                                    </button>
-                                                )}
-                                                <Link
-                                                    to={`/problems/${problem.slug}`}
-                                                    className="inline-flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <span>Solve</span>
-                                                    <ArrowRight size={14} />
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-between px-6 py-4 bg-gray-900/40 border-t border-gray-800">
-                            <div className="text-sm text-gray-500">
-                                Showing <span className="text-white font-medium">{(page - 1) * 20 + 1}</span> to <span className="text-white font-medium">{Math.min(page * 20, totalProblems)}</span> of <span className="text-white font-medium">{totalProblems}</span> problems
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => setPage(page - 1)}
-                                    disabled={page === 1}
-                                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <div className="flex space-x-1">
-                                    {[...Array(totalPages)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => setPage(i + 1)}
-                                            className={`w-8 h-8 rounded-lg text-sm font-medium transition ${page === i + 1
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={() => setPage(page + 1)}
-                                    disabled={page === totalPages}
-                                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-sm">
+                Coming Soon
+            </h1>
+            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
+                We're crafting an extraordinary problem-solving experience. Get ready to challenge yourself with our curated collection of coding problems, running on an advanced decentralized judging system.
+            </p>
+            <div className="flex items-center space-x-3 text-sm text-gray-500 font-bold uppercase tracking-widest bg-gray-900/50 px-6 py-3 rounded-full border border-gray-800/50">
+                <Flame size={18} className="text-pink-500" />
+                <span>Under Construction</span>
+                <Flame size={18} className="text-pink-500" />
+            </div>
         </div>
     );
 };

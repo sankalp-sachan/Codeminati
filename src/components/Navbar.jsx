@@ -14,7 +14,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="border-b border-gray-800 bg-[#0f0f15]/80 backdrop-blur-md sticky top-0 z-50">
+        <nav className="border-b border-white/10 bg-[#020617]/70 backdrop-blur-xl sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
                     <Link to="/" className="flex items-center space-x-2">
@@ -26,6 +26,7 @@ const Navbar = () => {
 
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/problems" className="text-gray-300 hover:text-white transition-colors">Problems</Link>
+                        <Link to="/daily-challenge" className="text-gray-300 hover:text-white transition-colors">Daily Challenge</Link>
                         <Link to="/contests" className="text-gray-300 hover:text-white transition-colors">Contests</Link>
                         {(user?.role === 'admin' || user?.role === 'assistant') && (
                             <Link to="/admin" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">

@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword';
 
 import Problems from './pages/Problems';
 import ProblemDetail from './pages/ProblemDetail';
+import DailyChallenge from './pages/DailyChallenge';
 
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
@@ -79,7 +80,7 @@ function AppContent() {
 
 
   return (
-    <div className={`min-h-screen bg-[#0f0f15] text-white flex flex-col`}>
+    <div className={`min-h-screen bg-[#020617] text-white flex flex-col`}>
       <AnimatePresence>
         {showSplash && <SplashScreen key="splash" />}
       </AnimatePresence>
@@ -96,6 +97,7 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/problems" element={<Problems />} />
+          <Route path="/daily-challenge" element={<DailyChallenge />} />
           <Route path="/contests" element={<Contests />} />
           <Route path="/judge/leaderboard" element={<JudgeLeaderboard />} />
           <Route path="/support" element={<Support />} />
