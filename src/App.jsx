@@ -3,6 +3,8 @@ import { AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import client from './api/client';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AIProvider } from './context/AIContext';
+import CodeminatiAI from './components/CodeminatiAI';
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -53,9 +55,11 @@ function App() {
   return (
     <Router>
       <GlobalErrorBoundary>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <AIProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </AIProvider>
       </GlobalErrorBoundary>
     </Router>
   );
@@ -155,6 +159,9 @@ function AppContent() {
           },
         }}
       />
+      {!['/compiler'].includes(location.pathname) && !location.pathname.includes('/problems/') && !location.pathname.includes('/solve/') && (
+        <CodeminatiAI />
+      )}
     </div>
   );
 }

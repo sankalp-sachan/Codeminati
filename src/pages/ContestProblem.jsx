@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import useAntiCheat from '../hooks/useAntiCheat';
 import Editor from '@monaco-editor/react';
-import { Play, Check, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Lightbulb, Clock, Plus, Trash2, Save, Cloud, Maximize2, Minimize2, Maximize, GripVertical, GripHorizontal, Coins, Ticket, Gem, Award, RotateCcw, Info, X, FileText, BookOpen, FlaskConical, History } from 'lucide-react';
+import { Play, Check, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Lightbulb, Clock, Plus, Trash2, Save, Cloud, Maximize2, Minimize2, Maximize, GripVertical, GripHorizontal, Coins, Ticket, Gem, Award, RotateCcw, Info, X, FileText, BookOpen, FlaskConical, History, Bot, Sparkles, Send, MessageSquare, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useAI } from '../context/AIContext';
 import Loader from '../components/Loader';
 
 const HintAccordion = ({ hint, index }) => {
@@ -41,10 +42,30 @@ const ContestProblem = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, updateUser } = useAuth();
+    const { updateAIContext, resetAIContext } = useAI();
 
     const [problem, setProblem] = useState(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
+
+    // Update AI Context
+    useEffect(() => {
+        if (problem) {
+            updateAIContext({
+                contextType: 'problem',
+                problemContext: {
+                    title: problem.title,
+                    description: problem.description,
+                    difficulty: problem.difficulty
+                },
+                codeContext: {
+                    code,
+                    language
+                }
+            });
+        }
+        return () => resetAIContext();
+    }, [problem, code, language]);
 
     const [codeMap, setCodeMap] = useState({});
 
@@ -73,6 +94,50 @@ const ContestProblem = () => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('description');
     const [activeBottomTab, setActiveBottomTab] = useState('testcase');
+
+    // AI Chat State
+    const [aiMessages, setAiMessages] = useState([
+        { role: 'model', content: "Hello! I'm your Contest Assistant. I can help clarify problem statements or give subtle hints. Good luck with the contest!" }
+    ]);
+    const [aiInput, setAiInput] = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const aiMessagesEndRef = useRef(null);
+
+    const handleAISend = async (e) => {
+        if (e) e.preventDefault();
+        if (!aiInput.trim() || aiLoading) return;
+
+        const userMsg = { role: 'user', content: aiInput };
+        const newMessages = [...aiMessages, userMsg];
+        setAiMessages(newMessages);
+        setAiInput('');
+        setAiLoading(true);
+
+        try {
+            const { data } = await client.post('/ai/chat', {
+                messages: newMessages,
+                contextType: 'problem',
+                problemContext: {
+                    title: problem.title,
+                    description: problem.description,
+                    difficulty: problem.difficulty
+                },
+                codeContext: { code, language }
+            });
+
+            setAiMessages([...newMessages, { role: 'model', content: data.content }]);
+        } catch (error) {
+            setAiMessages([...newMessages, { role: 'model', content: `Assistant is currently unavailable.` }]);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'ai') {
+            aiMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [aiMessages, activeTab]);
 
     // Test Case State
     const [userTestCases, setUserTestCases] = useState([]);
@@ -808,15 +873,20 @@ const ContestProblem = () => {
                     >
                         {showLeftPanel ? (
                             <>
-                                <div className="flex items-center space-x-1">
-                                    {['Description'].map((tab) => (
-                                        <div
-                                            key={tab}
-                                            className="px-4 py-2 text-sm font-medium transition-colors relative flex items-center space-x-2 text-white border-b-2 border-white"
-                                        >
-                                            <span>{tab}</span>
-                                        </div>
-                                    ))}
+                                <div className="flex items-center h-full">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('description'); }}
+                                        className={`px-4 py-2.5 text-xs font-bold transition-all relative ${activeTab === 'description' ? 'text-blue-400 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        DESCRIPTION
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('ai'); }}
+                                        className={`px-4 py-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 ${activeTab === 'ai' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        <Sparkles size={12} className={activeTab === 'ai' ? 'fill-purple-400' : ''} />
+                                        AI ASSISTANT
+                                    </button>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <button
@@ -899,6 +969,90 @@ const ContestProblem = () => {
                                         </li>
                                     ))}
                                 </ul>
+                            </div>
+                        )}
+                        {activeTab === 'ai' && (
+                            <div className="flex-1 flex flex-col h-full bg-[#0f0f15] overflow-hidden">
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                    {aiMessages.map((msg, idx) => (
+                                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`max-w-[90%] p-3 rounded-xl text-sm leading-relaxed ${
+                                                msg.role === 'user' 
+                                                    ? 'bg-blue-600 text-white rounded-tr-none' 
+                                                    : 'bg-[#1e1e2e] text-gray-200 border border-gray-700/50 rounded-tl-none prose prose-invert prose-sm'
+                                            }`}>
+                                                <ReactMarkdown 
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        code({ node, inline, className, children, ...props }) {
+                                                            const match = /language-(\w+)/.exec(className || '');
+                                                            const codeContent = String(children).replace(/\n$/, '');
+                                                            
+                                                            return !inline && match ? (
+                                                                <div className="relative group my-4">
+                                                                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 rounded-t-lg border-x border-t border-gray-700">
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{match[1]}</span>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setCode(codeContent);
+                                                                                toast.success('Code applied to editor!');
+                                                                            }}
+                                                                            className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/30"
+                                                                        >
+                                                                            <Download size={10} />
+                                                                            Apply to Editor
+                                                                        </button>
+                                                                    </div>
+                                                                    <pre className="m-0 bg-black/40 border border-gray-700 rounded-b-lg overflow-x-auto p-3 font-mono text-xs">
+                                                                        <code className={className} {...props}>
+                                                                            {children}
+                                                                        </code>
+                                                                    </pre>
+                                                                </div>
+                                                            ) : (
+                                                                <code className={`${className} bg-white/10 px-1 rounded text-blue-300 font-mono`} {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            )
+                                                        }
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {aiLoading && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-[#1e1e2e] p-3 rounded-xl rounded-tl-none border border-gray-700/50 flex space-x-1 items-center">
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={aiMessagesEndRef} />
+                                </div>
+
+                                {/* AI Input */}
+                                <form onSubmit={handleAISend} className="p-4 border-t border-gray-800 bg-[#16161a]">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={aiInput}
+                                            onChange={(e) => setAiInput(e.target.value)}
+                                            placeholder="Ask AI for clarification..."
+                                            className="w-full bg-[#0b0b0e] text-gray-200 text-sm rounded-xl px-4 py-3 pr-12 border border-gray-800 focus:border-blue-500/50 outline-none transition-all shadow-inner"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={aiLoading || !aiInput.trim()}
+                                            className="absolute right-2 top-2 p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 text-white rounded-lg transition-all active:scale-95"
+                                        >
+                                            <Send size={16} />
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         )}
                     </div>

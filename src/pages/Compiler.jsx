@@ -1,14 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Save, Terminal, FileCode, RotateCcw, Info, Check, AlertTriangle, Copy, X, TerminalSquare } from 'lucide-react';
+import { Play, Download, Save, Terminal, FileCode, RotateCcw, Info, Check, AlertTriangle, Copy, X, TerminalSquare, Bot, Sparkles, Send, MessageSquare } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { useAI } from '../context/AIContext';
+import client from '../api/client';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const Compiler = () => {
     const { user } = useAuth();
+    const { updateAIContext, resetAIContext } = useAI();
     const [language, setLanguage] = useState('python');
     const [code, setCode] = useState(`# Write your code here\nprint("Hello, ${user?.name || 'Coder'}!")\n`);
+
+    // Update AI Context
+    useEffect(() => {
+        updateAIContext({
+            contextType: 'compiler',
+            codeContext: {
+                code,
+                language
+            }
+        });
+        return () => resetAIContext();
+    }, [code, language]);
     const [terminalLines, setTerminalLines] = useState([]);
     const [currentInput, setCurrentInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -16,6 +33,46 @@ const Compiler = () => {
     const socketRef = useRef(null);
     const terminalEndRef = useRef(null);
     const inputRef = useRef(null);
+    const [activeTab, setActiveTab] = useState('output'); // 'output' or 'ai'
+    const [aiMessages, setAiMessages] = useState([
+        { role: 'model', content: "Hello! I'm your Compiler AI. I can help you debug, optimize, or explain your code. Just ask!" }
+    ]);
+    const [aiInput, setAiInput] = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const aiMessagesEndRef = useRef(null);
+
+    const handleAISend = async (e) => {
+        if (e) e.preventDefault();
+        if (!aiInput.trim() || aiLoading) return;
+
+        const userMsg = { role: 'user', content: aiInput };
+        const newMessages = [...aiMessages, userMsg];
+        setAiMessages(newMessages);
+        setAiInput('');
+        setAiLoading(true);
+
+        try {
+            const { data } = await client.post('/ai/chat', {
+                messages: newMessages,
+                contextType: 'compiler',
+                codeContext: { code, language }
+            });
+
+            setAiMessages([...newMessages, { role: 'model', content: data.content }]);
+        } catch (error) {
+            console.error('AI Error:', error);
+            const msg = error.response?.data?.message || 'Something went wrong.';
+            setAiMessages([...newMessages, { role: 'model', content: `Sorry, I encountered an error: ${msg}` }]);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'ai') {
+            aiMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [aiMessages, activeTab]);
 
     const defaultCodes = {
         python: '# Write your code here\nname = input("Enter your name: ")\nprint(f"Hello, {name}!")',
@@ -208,39 +265,155 @@ const Compiler = () => {
                         </div>
                     </div>
 
-                    {/* Terminal History */}
-                    <div
-                        className="flex-1 overflow-y-auto p-4 font-mono text-sm leading-relaxed custom-scrollbar bg-[#16161a]"
-                        onClick={() => inputRef.current?.focus()}
-                    >
-                        {terminalLines.map((line, idx) => (
-                            <span
-                                key={idx}
-                                className={`whitespace-pre-wrap break-words ${line.type === 'input' ? 'text-blue-400 font-bold' :
-                                    line.type === 'system' ? 'text-gray-500 italic' :
-                                        line.type === 'error' ? 'text-red-400' : 'text-gray-300'
-                                    }`}
+                    {/* Header with Tabs */}
+                    <div className="h-9 shrink-0 bg-[#1e1e1e] border-b border-gray-800 flex items-center justify-between px-4 select-none">
+                        <div className="flex space-x-4 h-full">
+                            <button 
+                                onClick={() => setActiveTab('output')}
+                                className={`text-[11px] font-bold py-2.5 transition-all relative ${activeTab === 'output' ? 'text-blue-400 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300'}`}
                             >
-                                {line.text}
-                            </span>
-                        ))}
+                                OUTPUT
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('ai')}
+                                className={`text-[11px] font-bold py-2.5 transition-all relative flex items-center gap-1.5 ${activeTab === 'ai' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                <Sparkles size={10} className={activeTab === 'ai' ? 'fill-purple-400' : ''} />
+                                AI ASSISTANT
+                            </button>
+                        </div>
+                        <div className="flex items-center space-x-3 text-gray-500">
+                            {activeTab === 'output' && (
+                                <>
+                                    <button onClick={copyTerminal} title="Copy Output" className="hover:text-white transition-colors"><Copy className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => setTerminalLines([])} title="Clear Terminal" className="hover:text-white transition-colors"><RotateCcw className="h-3.5 w-3.5" /></button>
+                                </>
+                            )}
+                            <button onClick={() => setTerminalLines([])} className="lg:hidden"><X className="h-4 w-4 hover:text-red-400 cursor-pointer" /></button>
+                        </div>
+                    </div>
 
-                        {/* Static Input Line */}
-                        {isExecuting && (
-                            <div className="inline-flex w-full items-center text-green-400 font-bold">
-                                <span className="mr-2">❯</span>
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={currentInput}
-                                    onChange={(e) => setCurrentInput(e.target.value)}
-                                    onKeyDown={handleTerminalKeyDown}
-                                    className="flex-1 bg-transparent border-none outline-none text-white font-mono caret-blue-500"
-                                    autoFocus
-                                />
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-hidden flex flex-col relative">
+                        {activeTab === 'output' ? (
+                            <div
+                                className="flex-1 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed custom-scrollbar bg-[#0f0f15]"
+                                onClick={() => inputRef.current?.focus()}
+                            >
+                                {terminalLines.map((line, idx) => (
+                                    <span
+                                        key={idx}
+                                        className={`whitespace-pre-wrap break-words block mb-1 ${line.type === 'input' ? 'text-blue-400 font-bold' :
+                                            line.type === 'system' ? 'text-gray-500 italic' :
+                                                line.type === 'error' ? 'text-red-400 font-bold' : 'text-gray-300'
+                                            }`}
+                                    >
+                                        {line.text}
+                                    </span>
+                                ))}
+
+                                {/* Static Input Line */}
+                                {isExecuting && (
+                                    <div className="inline-flex w-full items-center text-green-400 font-bold">
+                                        <span className="mr-2">❯</span>
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={currentInput}
+                                            onChange={(e) => setCurrentInput(e.target.value)}
+                                            onKeyDown={handleTerminalKeyDown}
+                                            className="flex-1 bg-transparent border-none outline-none text-white font-mono caret-blue-500"
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                                <div ref={terminalEndRef} className="h-4" />
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col bg-[#0f0f15] overflow-hidden">
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                                    {aiMessages.map((msg, idx) => (
+                                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`max-w-[90%] p-3 rounded-xl text-[13px] leading-relaxed ${
+                                                msg.role === 'user' 
+                                                    ? 'bg-blue-600 text-white rounded-tr-none' 
+                                                    : 'bg-[#1e1e2e] text-gray-200 border border-gray-700/50 rounded-tl-none prose prose-invert prose-sm'
+                                            }`}>
+                                                <ReactMarkdown 
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        code({ node, inline, className, children, ...props }) {
+                                                            const match = /language-(\w+)/.exec(className || '');
+                                                            const codeContent = String(children).replace(/\n$/, '');
+                                                            
+                                                            return !inline && match ? (
+                                                                <div className="relative group my-4">
+                                                                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 rounded-t-lg border-x border-t border-gray-700">
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{match[1]}</span>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setCode(codeContent);
+                                                                                toast.success('Code applied to editor!');
+                                                                                setActiveTab('output'); // Optionally switch back to output? 
+                                                                            }}
+                                                                            className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/30"
+                                                                        >
+                                                                            <Download size={10} />
+                                                                            Apply to Editor
+                                                                        </button>
+                                                                    </div>
+                                                                    <pre className="m-0 bg-black/40 border border-gray-700 rounded-b-lg overflow-x-auto p-3">
+                                                                        <code className={className} {...props}>
+                                                                            {children}
+                                                                        </code>
+                                                                    </pre>
+                                                                </div>
+                                                            ) : (
+                                                                <code className={`${className} bg-white/10 px-1 rounded text-blue-300`} {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            )
+                                                        }
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {aiLoading && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-[#1e1e2e] p-3 rounded-xl rounded-tl-none border border-gray-700/50 flex space-x-1 items-center">
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={aiMessagesEndRef} />
+                                </div>
+
+                                {/* AI Input */}
+                                <form onSubmit={handleAISend} className="p-3 border-t border-gray-800 bg-[#16161a]">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={aiInput}
+                                            onChange={(e) => setAiInput(e.target.value)}
+                                            placeholder="Ask AI about your code..."
+                                            className="w-full bg-[#0b0b0e] text-gray-200 text-xs rounded-lg px-3 py-2.5 pr-10 border border-gray-800 focus:border-blue-500/50 outline-none transition-all"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={aiLoading || !aiInput.trim()}
+                                            className="absolute right-1.5 top-1.5 p-1.5 text-blue-500 hover:text-blue-400 disabled:text-gray-700 transition-all"
+                                        >
+                                            <Send size={14} />
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         )}
-                        <div ref={terminalEndRef} className="h-4" />
                     </div>
 
                     {/* Footer Info */}
