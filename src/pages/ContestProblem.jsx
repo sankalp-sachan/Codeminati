@@ -42,11 +42,20 @@ const ContestProblem = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, updateUser } = useAuth();
-    const { updateAIContext, resetAIContext } = useAI();
+    const { updateAIContext, resetAIContext, appliedCode, setAppliedCode } = useAI();
 
     const [problem, setProblem] = useState(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
+
+    // Handle code applied from AI
+    useEffect(() => {
+        if (appliedCode) {
+            setCode(appliedCode);
+            setAppliedCode(null); // Reset after applying
+            toast.success('Code applied to editor!');
+        }
+    }, [appliedCode]);
 
     // Update AI Context
     useEffect(() => {
@@ -994,8 +1003,7 @@ const ContestProblem = () => {
                                                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{match[1]}</span>
                                                                         <button
                                                                             onClick={() => {
-                                                                                setCode(codeContent);
-                                                                                toast.success('Code applied to editor!');
+                                                                                setAppliedCode(codeContent);
                                                                             }}
                                                                             className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/30"
                                                                         >

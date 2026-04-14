@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Bot, Sparkles, Code, Info, Terminal } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, Sparkles, Code, Info, Terminal, Download } from 'lucide-react';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import { useAI } from '../context/AIContext';
 
 const CodeminatiAI = () => {
-    const { aiContext } = useAI();
+    const { aiContext, setAppliedCode } = useAI();
     const { contextType, problemContext, codeContext } = aiContext;
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
@@ -111,7 +111,41 @@ const CodeminatiAI = () => {
                                             ? 'bg-blue-600 text-white rounded-tr-none' 
                                             : 'bg-[#2a2a3a] text-gray-200 border border-gray-700/50 rounded-tl-none prose prose-invert prose-sm'
                                     }`}>
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        <ReactMarkdown 
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                code({ node, inline, className, children, ...props }) {
+                                                    const match = /language-(\w+)/.exec(className || '');
+                                                    const codeContent = String(children).replace(/\n$/, '');
+                                                    
+                                                    return !inline && match ? (
+                                                        <div className="relative group my-4">
+                                                            <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 rounded-t-lg border-x border-t border-gray-700">
+                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{match[1]}</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setAppliedCode(codeContent);
+                                                                    }}
+                                                                    className="flex items-center gap-1 text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/30"
+                                                                >
+                                                                    <Download size={10} />
+                                                                    Apply
+                                                                </button>
+                                                            </div>
+                                                            <pre className="m-0 bg-black/40 border border-gray-700 rounded-b-lg overflow-x-auto p-3 font-mono text-xs">
+                                                                <code className={className} {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            </pre>
+                                                        </div>
+                                                    ) : (
+                                                        <code className={`${className} bg-white/10 px-1 rounded text-blue-300 font-mono`} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                }
+                                            }}
+                                        >
                                             {msg.content}
                                         </ReactMarkdown>
                                     </div>

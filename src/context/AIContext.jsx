@@ -9,6 +9,8 @@ export const AIProvider = ({ children }) => {
         codeContext: null
     });
 
+    const [appliedCode, setAppliedCode] = useState(null);
+
     const updateAIContext = (newContext) => {
         setAiContext(prev => ({ ...prev, ...newContext }));
     };
@@ -19,10 +21,11 @@ export const AIProvider = ({ children }) => {
             problemContext: null,
             codeContext: null
         });
+        setAppliedCode(null);
     };
 
     return (
-        <AIContext.Provider value={{ aiContext, updateAIContext, resetAIContext }}>
+        <AIContext.Provider value={{ aiContext, updateAIContext, resetAIContext, appliedCode, setAppliedCode }}>
             {children}
         </AIContext.Provider>
     );
