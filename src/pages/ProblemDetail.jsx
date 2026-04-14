@@ -94,7 +94,7 @@ const ProblemDetail = () => {
 
     // AI Chat State
     const [aiMessages, setAiMessages] = useState([
-        { role: 'model', content: "Hello! I'm your Problem Assistant. I can help you understand the problem requirements or give you hints. How can I assist you?" }
+        { role: 'model', content: "Hello! I'm your Code Assistant for this problem. I'm here EXCLUSIVELY to help you with logic, debugging, and hints for this specific challenge. How can I help you solve it?" }
     ]);
     const [aiInput, setAiInput] = useState('');
     const [aiLoading, setAiLoading] = useState(false);

@@ -106,7 +106,7 @@ const ContestProblem = () => {
 
     // AI Chat State
     const [aiMessages, setAiMessages] = useState([
-        { role: 'model', content: "Hello! I'm your Contest Assistant. I can help clarify problem statements or give subtle hints. Good luck with the contest!" }
+        { role: 'model', content: "Hello! I'm your Code Assistant for this contest. I'm here EXCLUSIVELY to help you clarify problem statements or provide technical hints. Good luck!" }
     ]);
     const [aiInput, setAiInput] = useState('');
     const [aiLoading, setAiLoading] = useState(false);

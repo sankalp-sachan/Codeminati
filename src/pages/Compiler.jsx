@@ -45,7 +45,7 @@ const Compiler = () => {
     const inputRef = useRef(null);
     const [activeTab, setActiveTab] = useState('output'); // 'output' or 'ai'
     const [aiMessages, setAiMessages] = useState([
-        { role: 'model', content: "Hello! I'm your Compiler AI. I can help you debug, optimize, or explain your code. Just ask!" }
+        { role: 'model', content: "Hello! I'm your Code Assistant. I'm here EXCLUSIVELY to help you with programming, debugging, and optimization. Ask me anything about your code!" }
     ]);
     const [aiInput, setAiInput] = useState('');
     const [aiLoading, setAiLoading] = useState(false);

@@ -12,7 +12,7 @@ const CodeminatiAI = () => {
     const { contextType, problemContext, codeContext } = aiContext;
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', content: "Hello! I'm Codeminati AI. How can I help you today?" }
+        { role: 'model', content: "Hello! I'm the Codeminati Platform Assistant. I can help you with questions about our platform features, contests, and navigation. For coding help, please use the Code Assistant in the Compiler or Problem pages!" }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
