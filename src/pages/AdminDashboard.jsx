@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
@@ -351,6 +352,14 @@ const AdminDashboard = () => {
                                 <span>Publish Results</span>
                             </button>
 
+                            <Link
+                                to="/teacher"
+                                className="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors bg-gray-800 text-emerald-400 hover:bg-gray-700"
+                            >
+                                <Monitor size={18} />
+                                <span>Lab Management</span>
+                            </Link>
+
                         </>
                     )}
 
@@ -449,6 +458,7 @@ const AdminDashboard = () => {
                                             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white"
                                         >
                                             <option value="user">User</option>
+                                            <option value="teacher">Teacher</option>
                                             <option value="assistant">Assistant</option>
                                             <option value="judge">Judge</option>
                                             <option value="admin">Admin</option>
@@ -490,9 +500,10 @@ const AdminDashboard = () => {
                                                         <select
                                                             value={u.role}
                                                             onChange={(e) => handleRoleUpdate(u._id, e.target.value)}
-                                                            className={`bg-transparent border-b border-gray-700 text-sm focus:outline-none focus:border-blue-500 cursor-pointer ${u.role === 'admin' ? 'text-red-400 font-bold' : u.role === 'assistant' ? 'text-orange-400 font-bold' : u.role === 'judge' ? 'text-purple-400 font-bold' : 'text-gray-300'}`}
+                                                            className={`bg-transparent border-b border-gray-700 text-sm focus:outline-none focus:border-blue-500 cursor-pointer ${u.role === 'admin' ? 'text-red-400 font-bold' : u.role === 'teacher' ? 'text-emerald-400 font-bold' : u.role === 'assistant' ? 'text-orange-400 font-bold' : u.role === 'judge' ? 'text-purple-400 font-bold' : 'text-gray-300'}`}
                                                         >
                                                             <option value="user" className="bg-gray-800 text-gray-300">User</option>
+                                                            <option value="teacher" className="bg-gray-800 text-emerald-300 font-bold">Teacher</option>
                                                             <option value="assistant" className="bg-gray-800 text-orange-300">Assistant</option>
                                                             <option value="judge" className="bg-gray-800 text-purple-300">Judge</option>
                                                             <option value="admin" className="bg-gray-800 text-red-300">Admin</option>
