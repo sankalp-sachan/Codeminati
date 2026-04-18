@@ -1,10 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Code2, LogOut, User, Download } from 'lucide-react';
+import { Code2, LogOut, User, Download, FlaskConical, X } from 'lucide-react';
 import { usePWA } from '../hooks/usePWA';
 
 const Navbar = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, activeClassroom, setActiveClassroom } = useAuth();
     const navigate = useNavigate();
     const { isInstallable, install } = usePWA();
 
@@ -28,6 +28,12 @@ const Navbar = () => {
                         <Link to="/problems" className="text-gray-300 hover:text-white transition-colors">Problems</Link>
                         <Link to="/daily-challenge" className="text-gray-300 hover:text-white transition-colors">Daily Challenge</Link>
                         <Link to="/contests" className="text-gray-300 hover:text-white transition-colors">Contests</Link>
+                        {user?.role === 'user' && (
+                            <Link to="/join-class" className="text-blue-400 hover:text-blue-300 transition-colors">Join Lab</Link>
+                        )}
+                        {user?.role === 'teacher' && (
+                            <Link to="/teacher" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">Teacher Panel</Link>
+                        )}
                         {(user?.role === 'admin' || user?.role === 'assistant') && (
                             <Link to="/admin" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
                                 {user.role === 'admin' ? 'Admin' : 'Assistant Panel'}
@@ -39,6 +45,19 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        {activeClassroom && (
+                            <div className="flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 px-3 py-1.5 rounded-xl">
+                                <FlaskConical size={14} className="text-blue-400" />
+                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{activeClassroom.code}</span>
+                                <button 
+                                    onClick={() => setActiveClassroom(null)}
+                                    className="ml-2 text-gray-400 hover:text-red-400 transition-colors"
+                                    title="Leave Lab Session"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
                         {isInstallable && (
                             <button
                                 onClick={install}

@@ -9,6 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activeClassroom, setActiveClassroom] = useState(null);
 
     useEffect(() => {
         const checkUser = async () => {
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser, googleLogin }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser, googleLogin, activeClassroom, setActiveClassroom }}>
             {!loading && children}
         </AuthContext.Provider>
     );

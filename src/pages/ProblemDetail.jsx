@@ -42,12 +42,31 @@ const ProblemDetail = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const contestId = location.state?.contestId;
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, activeClassroom } = useAuth();
     const { updateAIContext, resetAIContext, appliedCode, setAppliedCode } = useAI();
 
     const [problem, setProblem] = useState(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
+
+    // Lab Activity Sync (Teacher Monitoring)
+    useEffect(() => {
+        if (!activeClassroom || !problem) return;
+
+        const syncInterval = setInterval(async () => {
+            try {
+                await client.post(`/classrooms/${activeClassroom._id}/activity`, {
+                    problemId: problem._id,
+                    code,
+                    language
+                });
+            } catch (err) {
+                console.error("Activity sync failed", err);
+            }
+        }, 8000); // Pulse every 8s
+
+        return () => clearInterval(syncInterval);
+    }, [activeClassroom, problem, code, language]);
 
     // Handle code applied from AI
     useEffect(() => {

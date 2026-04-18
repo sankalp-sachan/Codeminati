@@ -27,6 +27,9 @@ import Compiler from './pages/Compiler';
 import Contests from './pages/Contests';
 import ContestDetail from './pages/ContestDetail';
 import ContestProblem from './pages/ContestProblem';
+import TeacherDashboard from './pages/TeacherDashboard';
+import ClassroomLiveMonitor from './pages/ClassroomLiveMonitor';
+import JoinClass from './pages/JoinClass';
 import Support from './pages/Support';
 import JudgeLeaderboard from './pages/JudgeLeaderboard';
 import Submissions from './pages/Submissions';
@@ -103,6 +106,7 @@ function AppContent() {
           <Route path="/problems" element={<Problems />} />
           <Route path="/daily-challenge" element={<DailyChallenge />} />
           <Route path="/contests" element={<Contests />} />
+          <Route path="/join-class" element={<JoinClass />} />
           <Route path="/judge/leaderboard" element={<JudgeLeaderboard />} />
           <Route path="/support" element={<Support />} />
 
@@ -125,10 +129,12 @@ function AppContent() {
             <Route path="/submissions" element={<Submissions />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['admin', 'assistant']} />}>
+          {/* Admin & Faculty Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'assistant', 'teacher']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<Analytics />} />
+            <Route path="/teacher" element={<TeacherDashboard />} />
+            <Route path="/teacher/class/:id" element={<ClassroomLiveMonitor />} />
           </Route>
 
           {/* Judge Routes */}
