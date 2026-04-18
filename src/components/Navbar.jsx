@@ -31,7 +31,7 @@ const Navbar = () => {
                         {user?.role === 'user' && (
                             <Link to="/join-class" className="text-blue-400 hover:text-blue-300 transition-colors">Join Lab</Link>
                         )}
-                        {user?.role === 'teacher' && (
+                        {(user?.role === 'teacher' || user?.role === 'admin') && (
                             <Link to="/teacher" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">Teacher Panel</Link>
                         )}
                         {(user?.role === 'admin' || user?.role === 'assistant') && (
