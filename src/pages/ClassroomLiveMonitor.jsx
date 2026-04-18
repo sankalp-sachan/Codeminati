@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
-import { Activity, Users, Monitor, Code2, Clock, Terminal, ChevronRight, Search, Layout, RefreshCw, X } from 'lucide-react';
+import { Activity, Users, Monitor, Code2, Clock, Terminal, ChevronRight, Search, Layout, RefreshCw, X, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
 
