@@ -66,6 +66,9 @@ const Contests = () => {
         try {
             await client.post(`/contests/${contest._id}/register`, { goal: 'Participate', experience: 'General' });
             setSuccessModal({ show: true, contest });
+            // Refresh list to show "Enter Arena"
+            const { data } = await client.get('/contests');
+            setContests(data);
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to register");
         } finally {
@@ -245,7 +248,7 @@ const Contests = () => {
                                         <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{contest.problems?.length || 0} Problems</span>
                                     </div>
                                     <button
-                                        onClick={() => contest.myStatus === 'approved' || activeTab === 'ended' || activeTab === 'active' ? navigate(`/contests/${contest._id}`) : handleNotifyClick(contest)}
+                                        onClick={() => (contest.myStatus === 'approved' || activeTab === 'ended') ? navigate(`/contests/${contest._id}`) : handleNotifyClick(contest)}
                                         disabled={isRegistering === contest._id}
                                         className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                                             contest.myStatus === 'approved' || activeTab === 'ended'
