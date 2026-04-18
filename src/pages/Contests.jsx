@@ -15,7 +15,6 @@ const Contests = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active');
     const [successModal, setSuccessModal] = useState({ show: false, contest: null });
-    const [attemptModal, setAttemptModal] = useState({ show: false, contest: null });
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [allProblems, setAllProblems] = useState([]);
     const [problemSearch, setProblemSearch] = useState('');
@@ -54,27 +53,9 @@ const Contests = () => {
         }
     };
 
-    const [isRegistering, setIsRegistering] = useState(null); // Store contest ID being registered
 
-    const handleNotifyClick = async (contest) => {
-        if (!currentUser) {
-            toast.error("Please login to register");
-            return;
-        }
 
-        setIsRegistering(contest._id);
-        try {
-            await client.post(`/contests/${contest._id}/register`, { goal: 'Participate', experience: 'General' });
-            setSuccessModal({ show: true, contest });
-            // Refresh list to show "Enter Arena"
-            const { data } = await client.get('/contests');
-            setContests(data);
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to register");
-        } finally {
-            setIsRegistering(null);
-        }
-    };
+
 
     const fetchProblems = async () => {
         try {
@@ -248,17 +229,10 @@ const Contests = () => {
                                         <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{contest.problems?.length || 0} Problems</span>
                                     </div>
                                     <button
-                                        onClick={() => (contest.myStatus === 'approved' || activeTab === 'ended') ? navigate(`/contests/${contest._id}`) : handleNotifyClick(contest)}
-                                        disabled={isRegistering === contest._id}
-                                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                                            contest.myStatus === 'approved' || activeTab === 'ended'
-                                                ? 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
-                                                : 'bg-purple-600 text-white hover:shadow-[0_0_20px_rgba(147,51,234,0.3)]'
-                                        }`}
+                                        onClick={() => navigate(`/contests/${contest._id}`)}
+                                        className="bg-primary hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                                     >
-                                        {isRegistering === contest._id ? <Loader2 size={16} className="animate-spin" /> : 
-                                         activeTab === 'ended' ? 'View Standings' : 
-                                         contest.myStatus === 'approved' ? 'Enter Arena' : 'Join Now'}
+                                        {activeTab === 'ended' ? 'View Standings' : 'Enter Arena'}
                                     </button>
                                 </div>
                             </div>
@@ -454,27 +428,7 @@ const Contests = () => {
                 </div>
             )}
 
-            {/* Success Modal */}
-            {successModal.show && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-                    <div className="bg-[#0b0b13] border border-white/10 rounded-[3rem] p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                        <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8">
-                            <CheckCircle size={48} className="text-green-400" />
-                        </div>
-                        <h2 className="text-4xl font-black text-white mb-4 italic uppercase tracking-tighter">Registration Confirmed!</h2>
-                        <p className="text-gray-400 mb-10 leading-relaxed">
-                            You are now registered for <span className="text-white font-bold">{successModal.contest?.title}</span>. We've sent details to your email!
-                        </p>
-                        <button
-                            onClick={() => setSuccessModal({ show: false, contest: null })}
-                            className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-widest hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
-                        >
-                            AWESOME
-                        </button>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };
