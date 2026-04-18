@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { format } from 'date-fns';
 import { Trophy, Bell, CheckCircle, Plus, Calendar, Clock, BookOpen, X, Loader2, Search, EyeOff, Rocket, Bot, Sparkles } from 'lucide-react';
@@ -9,6 +9,7 @@ import Loader from '../components/Loader';
 
 const Contests = () => {
     const { user: currentUser } = useAuth();
+    const navigate = useNavigate();
     const [contests, setContests] = useState([]);
 
     const [loading, setLoading] = useState(true);
