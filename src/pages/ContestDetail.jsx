@@ -15,6 +15,23 @@ const ContestDetail = () => {
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState(null);
     const [requesting, setRequesting] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'warning'
+    });
+
+    const isSolved = (problemId) => {
+        return contest?.userStatus?.solvedProblems?.includes(problemId);
+    };
+
+    const isEnded = timeLeft === "Ended";
+
+    const closeConfirmModal = () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    };
 
     useEffect(() => {
         const fetchContest = async () => {
@@ -86,25 +103,7 @@ const ContestDetail = () => {
     }
     if (!contest) return <div className="p-8 text-center text-red-500">Contest not found.</div>;
 
-    const isSolved = (problemId) => {
-        return contest.userStatus?.solvedProblems?.includes(problemId);
-    };
 
-    const isEnded = timeLeft === "Ended";
-
-
-
-    const [confirmModal, setConfirmModal] = useState({
-        isOpen: false,
-        title: '',
-        message: '',
-        onConfirm: () => { },
-        type: 'warning'
-    });
-
-    const closeConfirmModal = () => {
-        setConfirmModal(prev => ({ ...prev, isOpen: false }));
-    };
 
     // Registration and Approval checks removed as per user request
 
