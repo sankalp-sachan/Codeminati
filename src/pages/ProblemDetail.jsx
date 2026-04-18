@@ -98,6 +98,9 @@ const ProblemDetail = () => {
     ]);
     const [aiInput, setAiInput] = useState('');
     const [aiLoading, setAiLoading] = useState(false);
+    const [submissions, setSubmissions] = useState([]);
+    const [fetchingSubmissions, setFetchingSubmissions] = useState(false);
+    const [solutions, setSolutions] = useState([]); // Community solutions
     const aiMessagesEndRef = useRef(null);
 
     const handleAISend = async (e) => {
@@ -251,6 +254,30 @@ const ProblemDetail = () => {
         }
     }, [contestId]);
 
+    const fetchSubmissions = async () => {
+        if (!user) return;
+        try {
+            setFetchingSubmissions(true);
+            const { data } = await client.get(`/problems/${slug}/submissions`, {
+                params: { 
+                    context: contestId ? 'contest' : 'practice',
+                    contestId: contestId 
+                }
+            });
+            setSubmissions(data);
+        } catch (error) {
+            console.error("Failed to fetch submissions", error);
+        } finally {
+            setFetchingSubmissions(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'submissions') {
+            fetchSubmissions();
+        }
+    }, [activeTab, slug]);
+
     // Navigation Logic
     const currentProblemIndex = contestProblems.findIndex(p => p.slug === slug);
     const prevProblem = currentProblemIndex > 0 ? contestProblems[currentProblemIndex - 1] : null;
@@ -375,6 +402,9 @@ const ProblemDetail = () => {
                 context: 'practice'
             });
 
+            setOverallStatus(data.status);
+            setTestResults(data.results);
+
             if (data.status === 'Accepted') {
                 toast.success('Accepted!');
                 if (data.userStats && !contestId) {
@@ -400,6 +430,8 @@ const ProblemDetail = () => {
                 }
             } else {
                 toast.error(data.status);
+                setIsConsoleOpen(true);
+                setActiveBottomTab('result');
             }
             setActiveTab('description');
         } catch (error) {
@@ -868,11 +900,23 @@ const ProblemDetail = () => {
                                         DESCRIPTION
                                     </button>
                                     <button
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('submissions'); }}
+                                        className={`px-4 py-2 text-xs font-bold transition-all relative ${activeTab === 'submissions' ? 'text-green-400 border-b-2 border-green-500' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        SUBMISSIONS
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setActiveTab('solutions'); }}
+                                        className={`px-4 py-2 text-xs font-bold transition-all relative ${activeTab === 'solutions' ? 'text-yellow-400 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        SOLUTIONS
+                                    </button>
+                                    <button
                                         onClick={(e) => { e.stopPropagation(); setActiveTab('ai'); }}
                                         className={`px-4 py-2.5 text-xs font-bold transition-all relative flex items-center gap-1.5 ${activeTab === 'ai' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
                                     >
                                         <Sparkles size={12} className={activeTab === 'ai' ? 'fill-purple-400' : ''} />
-                                        AI ASSISTANT
+                                        AI HINTS
                                     </button>
                                 </div>
                                 <div className="flex items-center space-x-2">
@@ -1039,6 +1083,82 @@ const ProblemDetail = () => {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        )}
+
+                        {activeTab === 'submissions' && (
+                            <div className="flex-1 flex flex-col h-full bg-[#0f0f15] overflow-hidden">
+                                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <History className="text-green-500" size={20} />
+                                        My Submissions
+                                    </h3>
+                                    <button onClick={fetchSubmissions} className="text-gray-400 hover:text-white p-2">
+                                        <RotateCcw size={16} />
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                                    {fetchingSubmissions ? (
+                                        <div className="flex justify-center p-8"><Loader size="md" /></div>
+                                    ) : submissions.length === 0 ? (
+                                        <div className="text-center p-12 bg-gray-800/20 rounded-xl border border-dashed border-gray-700">
+                                            <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                                            <p className="text-gray-500">No submissions yet. Start coding!</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {submissions.map((sub) => (
+                                                <div key={sub._id} className="bg-[#1e1e2e] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-600 transition-all group">
+                                                    <div className="flex flex-col">
+                                                        <span className={`text-sm font-bold ${sub.verdict === 'Accepted' ? 'text-green-400' : 'text-red-400'}`}>
+                                                            {sub.verdict}
+                                                        </span>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            <span className="text-[10px] text-gray-500 uppercase font-mono bg-black/30 px-2 py-0.5 rounded">{sub.language}</span>
+                                                            <span className="text-[10px] text-gray-400 font-mono">{new Date(sub.createdAt).toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        {sub.metrics && (
+                                                            <div className="text-right hidden sm:block">
+                                                                <div className="text-xs text-gray-400 font-mono">{sub.metrics.runtime}ms</div>
+                                                                <div className="text-[10px] text-gray-600 font-mono">{sub.metrics.memory}MB</div>
+                                                            </div>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => {
+                                                                setCode(sub.code);
+                                                                toast.success('Code restored!');
+                                                            }}
+                                                            className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 shadow-sm"
+                                                            title="Restore Code"
+                                                        >
+                                                            <RotateCcw size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'solutions' && (
+                            <div className="flex-1 flex flex-col h-full bg-[#0f0f15] overflow-hidden">
+                                <div className="p-6 border-b border-gray-800">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <BookOpen className="text-yellow-500" size={20} />
+                                        Community Solutions
+                                    </h3>
+                                </div>
+                                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                                    <div className="bg-gray-800/20 p-8 rounded-full mb-6">
+                                        <Award className="w-16 h-16 text-gray-600 opacity-30" />
+                                    </div>
+                                    <h4 className="text-gray-300 font-bold text-lg mb-2">Curating Excellence</h4>
+                                    <p className="text-gray-500 max-w-sm">Editorial and high-quality community solutions are currently being indexed for this problem. Check back soon!</p>
+                                </div>
                             </div>
                         )}
                     </div>

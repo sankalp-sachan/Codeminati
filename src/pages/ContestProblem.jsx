@@ -396,22 +396,25 @@ const ContestProblem = () => {
                 context: 'contest'
             });
 
+            setOverallStatus(data.status);
+            setTestResults(data.results);
+
             if (data.status === 'Accepted') {
                 toast.success('Accepted!');
                 if (data.userStats) {
                     updateUser(data.userStats);
                 }
 
-                // Reset code to default
+                // Reset code
                 const starter = problem?.starterCode?.[language] || '// Write your code here';
-                setCode(starter);
-                setLastSavedCode(starter);
-                setCodeMap(prev => ({ ...prev, [language]: starter }));
+                // setCode(starter);
+                // setLastSavedCode(starter);
+                // setCodeMap(prev => ({ ...prev, [language]: starter }));
 
                 // Show Success Modal with Metrics
                 if (data.metrics) {
                     setModalData({
-                        code: code, // Use the variable from outer scope (the code that was submitted)
+                        code: code,
                         language,
                         metrics: data.metrics,
                         passedCases: data.passedCases || problem.testCases?.length || 0,
@@ -422,6 +425,8 @@ const ContestProblem = () => {
 
             } else {
                 toast.error(data.status);
+                setIsConsoleOpen(true);
+                setActiveBottomTab('result');
             }
             setActiveTab('description');
         } catch (error) {
