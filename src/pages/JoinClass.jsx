@@ -7,7 +7,7 @@ import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
 
 const JoinClass = () => {
-    const { setActiveClassroom } = useAuth();
+    const { user, setActiveClassroom } = useAuth();
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [myClasses, setMyClasses] = useState([]);
@@ -106,7 +106,7 @@ const JoinClass = () => {
                             <div key={cls._id} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:bg-white/[0.07] transition-all">
                                 <div>
                                     <h3 className="font-bold text-white mb-1 uppercase tracking-tight italic group-hover:text-blue-400 transition-colors">{cls.name}</h3>
-                                    <p className="text-xs text-gray-500 font-medium italic">Faculty: {cls.teacher.name}</p>
+                                    <p className="text-xs text-gray-500 font-medium italic">Faculty: {cls.teacher?.name || 'Assigned Faculty'}</p>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
@@ -125,14 +125,14 @@ const JoinClass = () => {
                                     </button>
                                     <button 
                                         onClick={() => {
-                                            if (user.role === 'teacher' || user.role === 'admin') {
+                                            if (user?.role === 'teacher' || user?.role === 'admin') {
                                                 navigate(`/classrooms/${cls._id}/assignments/create`);
                                             } else {
                                                 navigate(`/classrooms/${cls._id}/assignments`);
                                             }
                                         }}
                                         className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
-                                        title={user.role === 'teacher' ? "Manage Assignments" : "View Assignments"}
+                                        title={user?.role === 'teacher' ? "Manage Assignments" : "View Assignments"}
                                     >
                                         <BookOpen size={16} />
                                     </button>
