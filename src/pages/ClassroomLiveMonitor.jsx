@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { Activity, Users, Monitor, Code2, Clock, Terminal, ChevronRight, Search, Layout, RefreshCw, X, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { io } from 'socket.io-client';
 import Loader from '../components/Loader';
 
 const ClassroomLiveMonitor = () => {
@@ -13,15 +14,77 @@ const ClassroomLiveMonitor = () => {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [filter, setFilter] = useState('');
     const [autoRefresh, setAutoRefresh] = useState(true);
+    const [inspectorTab, setInspectorTab] = useState('code'); // 'code', 'terminal', 'results'
+    const [studentTerminals, setStudentTerminals] = useState({}); // { userId: [lines] }
+    const [studentResults, setStudentResults] = useState({}); // { userId: { status, results } }
 
     useEffect(() => {
         fetchData();
     }, [id]);
 
     useEffect(() => {
+        const socketUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        const socket = io(socketUrl, {
+            withCredentials: true,
+            transports: ['websocket']
+        });
+
+        socket.emit('classroom:monitor', { classroomId: id });
+
+        socket.on('classroom:student_code', (update) => {
+            setData(prev => {
+                if (!prev) return prev;
+                const newActivities = prev.activities.map(act => {
+                    if (act.user._id === update.userId) {
+                        return {
+                            ...act,
+                            currentCode: update.code,
+                            language: update.language,
+                            problem: update.problemTitle ? { title: update.problemTitle } : act.problem,
+                            lastActive: update.lastActive
+                        };
+                    }
+                    return act;
+                });
+                return { ...prev, activities: newActivities };
+            });
+
+            // Update selected student if they are the one who sent code
+            setSelectedStudent(prev => {
+                if (prev && prev.user._id === update.userId) {
+                    return {
+                        ...prev,
+                        currentCode: update.code,
+                        language: update.language,
+                        problem: update.problemTitle ? { title: update.problemTitle } : prev.problem,
+                        lastActive: update.lastActive
+                    };
+                }
+                return prev;
+            });
+        });
+
+        socket.on('classroom:student_terminal', (update) => {
+            setStudentTerminals(prev => ({
+                ...prev,
+                [update.userId]: [...(prev[update.userId] || []), update.output].slice(-50) // Keep last 50 lines
+            }));
+        });
+
+        socket.on('classroom:student_results', (update) => {
+            setStudentResults(prev => ({
+                ...prev,
+                [update.userId]: { status: update.status, results: update.results, timestamp: update.timestamp }
+            }));
+        });
+
+        return () => socket.disconnect();
+    }, [id]);
+
+    useEffect(() => {
         let interval;
         if (autoRefresh) {
-            interval = setInterval(fetchData, 10000); // Poll every 10s
+            interval = setInterval(fetchData, 30000); // Polling reduced to 30s as fallback
         }
         return () => clearInterval(interval);
     }, [id, autoRefresh]);
@@ -89,6 +152,14 @@ const ClassroomLiveMonitor = () => {
                                 onChange={(e) => setFilter(e.target.value)}
                             />
                         </div>
+
+                        <button 
+                            onClick={() => navigate(`/classrooms/${id}/assignments/create`)}
+                            className="flex items-center gap-2 px-6 py-3 bg-blue-600/10 border border-blue-500/30 text-blue-400 rounded-2xl font-bold text-sm hover:bg-blue-600/20 transition-all"
+                        >
+                            <BookOpen size={16} />
+                            Assignments
+                        </button>
                         <button 
                             onClick={() => setAutoRefresh(!autoRefresh)}
                             className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm transition-all border ${
@@ -189,16 +260,83 @@ const ClassroomLiveMonitor = () => {
                                     </div>
                                 </div>
 
-                                <div className="p-8 space-y-6">
-                                    <div className="bg-black/60 rounded-3xl p-6 border border-white/5 font-mono text-xs leading-relaxed overflow-x-auto max-h-[60vh] custom-scrollbar">
-                                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
-                                            <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Buffer Content</span>
-                                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-[9px] uppercase font-bold">{selectedStudent.language}</span>
+                                <div className="px-8 pt-4 flex gap-4 border-b border-white/5 bg-white/[0.02]">
+                                    {['code', 'terminal', 'results'].map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setInspectorTab(tab)}
+                                            className={`pb-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                                                inspectorTab === tab ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'
+                                            }`}
+                                        >
+                                            {tab}
+                                            {inspectorTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+                                    {inspectorTab === 'code' && (
+                                        <div className="bg-black/60 rounded-3xl p-6 border border-white/5 font-mono text-xs leading-relaxed overflow-x-auto max-h-[60vh] custom-scrollbar">
+                                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
+                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Buffer Content</span>
+                                                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-[9px] uppercase font-bold">{selectedStudent.language}</span>
+                                            </div>
+                                            <pre className="text-gray-300">
+                                                {selectedStudent.currentCode || '// This student has not typed anything yet.'}
+                                            </pre>
                                         </div>
-                                        <pre className="text-gray-300">
-                                            {selectedStudent.currentCode || '// This student has not typed anything yet.'}
-                                        </pre>
-                                    </div>
+                                    )}
+
+                                    {inspectorTab === 'terminal' && (
+                                        <div className="bg-[#0f0f15] rounded-3xl p-6 border border-white/5 font-mono text-[11px] leading-relaxed overflow-y-auto max-h-[60vh] h-[400px] custom-scrollbar">
+                                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
+                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Live Terminal Output</span>
+                                            </div>
+                                            {(studentTerminals[selectedStudent.user._id] || []).length > 0 ? (
+                                                <div className="space-y-1">
+                                                    {studentTerminals[selectedStudent.user._id].map((line, i) => (
+                                                        <div key={i} className="text-emerald-400 break-words">{line}</div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-gray-700 italic">No terminal activity recorded.</div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {inspectorTab === 'results' && (
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Execution Metrics</span>
+                                            </div>
+                                            {studentResults[selectedStudent.user._id] ? (
+                                                <div className="space-y-4">
+                                                    <div className={`p-4 rounded-2xl border ${
+                                                        studentResults[selectedStudent.user._id].status === 'Accepted' 
+                                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                                                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                                                    }`}>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">Last Status</p>
+                                                        <p className="text-xl font-black italic">{studentResults[selectedStudent.user._id].status}</p>
+                                                    </div>
+                                                    
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {studentResults[selectedStudent.user._id].results?.map((res, i) => (
+                                                            <div key={i} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between">
+                                                                <span className="text-[10px] text-gray-500 font-bold">Case {i+1}</span>
+                                                                {res.passed ? <Check size={14} className="text-emerald-500" /> : <X size={14} className="text-red-500" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-10 border-2 border-dashed border-white/5 rounded-3xl text-center text-gray-700 italic">
+                                                    No execution results available yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center">

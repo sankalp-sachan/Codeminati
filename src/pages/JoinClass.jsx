@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
-import { ArrowLeft, LogIn, CheckCircle, ShieldAlert, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, LogIn, CheckCircle, ShieldAlert, Sparkles, X, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
@@ -122,6 +122,19 @@ const JoinClass = () => {
                                         title="Enter Lab"
                                     >
                                         <LogIn size={16} />
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            if (user.role === 'teacher' || user.role === 'admin') {
+                                                navigate(`/classrooms/${cls._id}/assignments/create`);
+                                            } else {
+                                                navigate(`/classrooms/${cls._id}/assignments`);
+                                            }
+                                        }}
+                                        className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                                        title={user.role === 'teacher' ? "Manage Assignments" : "View Assignments"}
+                                    >
+                                        <BookOpen size={16} />
                                     </button>
                                 </div>
                             </div>

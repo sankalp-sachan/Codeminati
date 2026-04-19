@@ -10,7 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const Compiler = () => {
-    const { user } = useAuth();
+    const { user, activeClassroom } = useAuth();
     const { updateAIContext, resetAIContext, appliedCode, setAppliedCode } = useAI();
     const [language, setLanguage] = useState('python');
     const [code, setCode] = useState(`# Write your code here\nprint("Hello, ${user?.name || 'Coder'}!")\n`);
@@ -101,6 +101,15 @@ const Compiler = () => {
 
         socketRef.current.on('terminal:output', (data) => {
             setTerminalLines(prev => [...prev, { type: 'output', text: data }]);
+            
+            // Sync terminal to classroom monitor if active
+            if (activeClassroom && user) {
+                socketRef.current.emit('classroom:terminal_output', {
+                    classroomId: activeClassroom._id,
+                    userId: user._id,
+                    output: data
+                });
+            }
         });
 
         socketRef.current.on('terminal:exit', ({ code, error }) => {
@@ -119,10 +128,31 @@ const Compiler = () => {
             toast.error('Execution Error');
         });
 
+        // Classroom Monitoring Join
+        if (activeClassroom && user) {
+            socketRef.current.emit('classroom:join_session', {
+                classroomId: activeClassroom._id,
+                userId: user._id
+            });
+        }
+
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
         };
-    }, []);
+    }, [activeClassroom?._id, user?._id]);
+
+    // Real-time code update via Socket for Compiler
+    useEffect(() => {
+        if (socketRef.current && activeClassroom && user) {
+            socketRef.current.emit('classroom:code_update', {
+                classroomId: activeClassroom._id,
+                userId: user._id,
+                code,
+                language,
+                problemTitle: 'Interactive Compiler'
+            });
+        }
+    }, [code, language, activeClassroom, user]);
 
     useEffect(() => {
         terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -199,6 +229,13 @@ const Compiler = () => {
                         <option value="javascript">Node.js</option>
                         <option value="java">Java</option>
                     </select>
+
+                    {activeClassroom && (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{activeClassroom.name} Live</span>
+                        </div>
+                    )}
 
                 </div>
 

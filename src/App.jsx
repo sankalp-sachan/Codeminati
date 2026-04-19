@@ -35,6 +35,8 @@ import JudgeLeaderboard from './pages/JudgeLeaderboard';
 import Submissions from './pages/Submissions';
 import Analytics from './pages/Analytics';
 import SplashScreen from './components/SplashScreen';
+import AssignmentCreate from './pages/AssignmentCreate';
+import ClassroomAssignments from './pages/ClassroomAssignments';
 
 import { useEffect, useState } from 'react';
 
@@ -124,6 +126,7 @@ function AppContent() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/compiler" element={<Compiler />} />
             <Route path="/problems/:slug" element={<ProblemDetail />} />
+            <Route path="/classrooms/:id/assignments" element={<ClassroomAssignments />} />
             <Route path="/contests/:id" element={<ContestDetail />} />
             <Route path="/contests/:id/solve/:slug" element={<ContestProblem />} />
             <Route path="/submissions" element={<Submissions />} />
@@ -135,6 +138,7 @@ function AppContent() {
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/teacher" element={<TeacherDashboard />} />
             <Route path="/teacher/class/:id" element={<ClassroomLiveMonitor />} />
+            <Route path="/classrooms/:id/assignments/create" element={<AssignmentCreate />} />
           </Route>
 
           {/* Judge Routes */}

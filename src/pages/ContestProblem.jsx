@@ -10,6 +10,7 @@ import client from '../api/client';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useAI } from '../context/AIContext';
+import { io } from 'socket.io-client';
 import Loader from '../components/Loader';
 
 const HintAccordion = ({ hint, index }) => {
@@ -47,6 +48,56 @@ const ContestProblem = () => {
     const [problem, setProblem] = useState(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
+    const socketRef = useRef(null);
+    const { activeClassroom } = useAuth();
+
+    // Lab Activity Sync (Teacher Monitoring)
+    useEffect(() => {
+        if (!activeClassroom || !problem || !user) return;
+
+        // Initialize Socket for Classroom Monitoring
+        const socketUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        socketRef.current = io(socketUrl, {
+            withCredentials: true,
+            transports: ['websocket']
+        });
+
+        socketRef.current.emit('classroom:join_session', {
+            classroomId: activeClassroom._id,
+            userId: user._id
+        });
+
+        const syncInterval = setInterval(async () => {
+            // Still keep the database sync for persistence
+            try {
+                await client.post(`/classrooms/${activeClassroom._id}/activity`, {
+                    problemId: problem._id,
+                    code,
+                    language
+                });
+            } catch (err) {
+                console.error("Activity sync failed", err);
+            }
+        }, 30000); // Pulse every 30s for DB persistence
+
+        return () => {
+            clearInterval(syncInterval);
+            if (socketRef.current) socketRef.current.disconnect();
+        };
+    }, [activeClassroom, problem?._id, user?._id]);
+
+    // Real-time code update via Socket
+    useEffect(() => {
+        if (socketRef.current && activeClassroom && problem && user) {
+            socketRef.current.emit('classroom:code_update', {
+                classroomId: activeClassroom._id,
+                userId: user._id,
+                code,
+                language,
+                problemTitle: problem.title
+            });
+        }
+    }, [code, language, activeClassroom, problem, user]);
 
     // Handle code applied from AI
     useEffect(() => {
@@ -372,6 +423,16 @@ const ContestProblem = () => {
             setOverallStatus(data.status);
             setTestResults(data.results);
 
+            // Sync results to classroom monitor
+            if (activeClassroom && user && socketRef.current) {
+                socketRef.current.emit('classroom:results_update', {
+                    classroomId: activeClassroom._id,
+                    userId: user._id,
+                    status: data.status,
+                    results: data.results
+                });
+            }
+
         } catch (error) {
             toast.error('Run failed');
             setOverallStatus('Error');
@@ -398,6 +459,16 @@ const ContestProblem = () => {
 
             setOverallStatus(data.status);
             setTestResults(data.results);
+
+            // Sync results to classroom monitor
+            if (activeClassroom && user && socketRef.current) {
+                socketRef.current.emit('classroom:results_update', {
+                    classroomId: activeClassroom._id,
+                    userId: user._id,
+                    status: data.status,
+                    results: data.results
+                });
+            }
 
             if (data.status === 'Accepted') {
                 toast.success('Accepted!');
@@ -770,6 +841,13 @@ const ContestProblem = () => {
                     >
                         <ChevronLeft className="h-4 w-4" /> <span>Back to Contest</span>
                     </button>
+
+                    {activeClassroom && (
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">{activeClassroom.name} Live Monitoring</span>
+                        </div>
+                    )}
 
                     <div className="flex items-center bg-gray-900/50 rounded-lg p-1 border border-gray-800 shrink-0">
                         <button
