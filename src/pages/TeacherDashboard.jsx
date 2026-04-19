@@ -131,15 +131,21 @@ const TeacherDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="flex gap-4">
+                            <div className="flex gap-3">
                                 <Link 
                                     to={`/teacher/class/${cls._id}`}
-                                    className="flex-1 bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs text-center hover:bg-gray-200 transition-all"
+                                    className="flex-1 bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-center hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                 >
-                                    Monitor Live
+                                    <Activity size={14} /> Monitor Live
                                 </Link>
-                                <button className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-gray-400">
-                                    <Settings size={20} />
+                                <Link 
+                                    to={`/classrooms/${cls._id}/assignments/create`}
+                                    className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-center hover:bg-blue-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40"
+                                >
+                                    <Plus size={14} /> Assignments
+                                </Link>
+                                <button className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-gray-400 group-hover:text-white">
+                                    <Settings size={18} />
                                 </button>
                             </div>
                         </div>
