@@ -438,12 +438,17 @@ const ProblemDetail = () => {
         setOverallStatus('Running...');
 
         try {
+            const queryParams = new URLSearchParams(location.search);
+            const assignmentId = queryParams.get('assignmentId');
+
             const { data } = await client.post(`/problems/${slug}/submit`, {
                 code,
                 language,
                 mode: 'run',
                 testCases: userTestCases,
-                context: 'practice'
+                context: assignmentId ? 'assignment' : (contestId ? 'contest' : 'practice'),
+                assignmentId: assignmentId || undefined,
+                contestId: contestId || undefined
             });
 
             setOverallStatus(data.status);
