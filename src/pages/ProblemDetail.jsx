@@ -225,10 +225,10 @@ const ProblemDetail = () => {
     // Fetch Problem & Progress
     useEffect(() => {
         const fetchProblemAndProgress = async () => {
-            const queryParams = new URLSearchParams(location.search);
-            const assignmentId = queryParams.get('assignmentId');
-
             try {
+                const queryParams = new URLSearchParams(location.search);
+                const assignmentId = queryParams.get('assignmentId');
+
                 // 1. Fetch Problem
                 const { data: problemData } = await client.get(`/problems/${slug}${assignmentId ? `?assignmentId=${assignmentId}` : ''}`);
                 setProblem(problemData);
@@ -247,7 +247,14 @@ const ProblemDetail = () => {
                 // 2. Fetch Progress (if logged in)
                 if (user) {
                     try {
-                        const { data: progressData } = await client.get(`/problems/${slug}/progress?context=practice`);
+                        const progressContext = assignmentId ? 'assignment' : (contestId ? 'contest' : 'practice');
+                        const { data: progressData } = await client.get(`/problems/${slug}/progress`, {
+                            params: { 
+                                context: progressContext,
+                                assignmentId: assignmentId || undefined,
+                                contestId: contestId || undefined
+                            }
+                        });
                         if (progressData) {
                             console.log('Restoring progress...');
                             initialMap = progressData.codes || {};
@@ -369,7 +376,17 @@ const ProblemDetail = () => {
         const timeoutId = setTimeout(async () => {
             setIsSaving(true);
             try {
-                await client.post(`/problems/${slug}/progress`, { code, language, context: 'practice' });
+                const queryParams = new URLSearchParams(location.search);
+                const assignmentId = queryParams.get('assignmentId');
+                const progressContext = assignmentId ? 'assignment' : (contestId ? 'contest' : 'practice');
+
+                await client.post(`/problems/${slug}/progress`, { 
+                    code, 
+                    language, 
+                    context: progressContext,
+                    assignmentId: assignmentId || undefined,
+                    contestId: contestId || undefined
+                });
                 setLastSavedCode(code);
                 setCodeMap(prev => ({ ...prev, [language]: code }));
             } catch (error) {
@@ -380,7 +397,7 @@ const ProblemDetail = () => {
         }, 2000);
 
         return () => clearTimeout(timeoutId);
-    }, [code, language, slug, user, lastSavedCode]);
+    }, [code, language, slug, user, lastSavedCode, contestId, location.search]);
 
 
 

@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 const ClassroomAssignments = () => {
     const { id: classroomId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, setActiveClassroom } = useAuth();
     const [loading, setLoading] = useState(true);
     const [assignments, setAssignments] = useState([]);
     const [classroom, setClassroom] = useState(null);
@@ -22,6 +22,7 @@ const ClassroomAssignments = () => {
                     client.get(`/classrooms/${classroomId}/assignments`)
                 ]);
                 setClassroom(classRes.data.classroom);
+                setActiveClassroom(classRes.data.classroom);
                 setAssignments(assignRes.data);
             } catch (err) {
                 toast.error("Failed to load assignments");
