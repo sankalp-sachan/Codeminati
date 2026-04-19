@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { toast } from 'react-hot-toast';
-import { Plus, Trash2, Save, FileCode, Check, AlertTriangle, ChevronLeft, Layout, BookOpen, Clock } from 'lucide-react';
+import { Plus, Trash2, Save, FileCode, Check, AlertTriangle, ChevronLeft, Layout, BookOpen, Clock, Sparkles, Wand2 } from 'lucide-react';
 import Loader from '../components/Loader';
 import Editor from '@monaco-editor/react';
 
@@ -30,11 +30,15 @@ const AssignmentCreate = () => {
         },
         testCases: [
             { input: '', expectedOutput: '', isHidden: false }
-        ]
+        ],
+        constraints: '',
+        examples: []
     });
 
     const [activeAssignmentId, setActiveAssignmentId] = useState(null);
     const [assignments, setAssignments] = useState([]);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [generatingAI, setGeneratingAI] = useState(false);
 
     useEffect(() => {
         fetchClassroom();
@@ -120,6 +124,33 @@ const AssignmentCreate = () => {
         const updated = newProblem.testCases.filter((_, i) => i !== index);
         setNewProblem({ ...newProblem, testCases: updated });
     };
+
+    const handleAIGenerate = async () => {
+        if (!aiPrompt) return toast.error("Please enter a prompt for AI");
+        setGeneratingAI(true);
+        try {
+            const { data } = await client.post('/ai/generate-problem', { prompt: aiPrompt });
+            setNewProblem({
+                ...newProblem,
+                title: data.title || '',
+                description: data.description || '',
+                difficulty: data.difficulty || 'Medium',
+                category: data.category || 'Assignment',
+                starterCode: data.starterCode || newProblem.starterCode,
+                testCases: data.testCases || newProblem.testCases,
+                constraints: data.constraints || '',
+                examples: data.examples || []
+            });
+            toast.success("Problem generated successfully!");
+            setAiPrompt('');
+        } catch (err) {
+            toast.error("AI Generation failed. Please try again.");
+        } finally {
+            setGeneratingAI(false);
+        }
+    };
+
+    const [activeLang, setActiveLang] = useState('python');
 
     if (!classroom) return <div className="h-screen flex items-center justify-center bg-[#0f0f15]"><Loader size="xl" /></div>;
 
@@ -225,94 +256,195 @@ const AssignmentCreate = () => {
                                 </div>
 
                                 {showProblemForm ? (
-                                    <form onSubmit={handleAddProblem} className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-300">
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Problem Title</label>
-                                                <input 
-                                                    type="text"
+                                    <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                                        {/* AI Generation Box */}
+                                        <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
+                                                <Sparkles size={100} />
+                                            </div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Wand2 className="text-blue-400" size={18} />
+                                                    <h3 className="text-sm font-black text-white uppercase tracking-widest italic font-medium">AI Problem Architect</h3>
+                                                </div>
+                                                <div className="flex gap-4">
+                                                    <input 
+                                                        type="text"
+                                                        value={aiPrompt}
+                                                        onChange={(e) => setAiPrompt(e.target.value)}
+                                                        placeholder="e.g. 'code to add number via oops' or 'binary search explanation'"
+                                                        className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-blue-500/50 outline-none transition-all placeholder:text-gray-600"
+                                                    />
+                                                    <button 
+                                                        onClick={handleAIGenerate}
+                                                        disabled={generatingAI || !aiPrompt}
+                                                        className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 px-8 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-900/20"
+                                                    >
+                                                        {generatingAI ? (
+                                                            <>
+                                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                                Generating...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Sparkles size={16} />
+                                                                Generate
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 mt-4 leading-relaxed italic">
+                                                    AI will generate problem description, constraints, test cases, and starter code based on your prompt.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                                                <div className="w-full border-t border-white/5"></div>
+                                            </div>
+                                            <div className="relative flex justify-center text-xs uppercase font-black tracking-[0.3em] text-gray-700 italic">
+                                                <span className="bg-[#1a1a24] px-4">Problem Details Editor</span>
+                                            </div>
+                                        </div>
+
+                                        <form onSubmit={handleAddProblem} className="space-y-8">
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Problem Title</label>
+                                                    <input 
+                                                        type="text"
+                                                        required
+                                                        value={newProblem.title}
+                                                        onChange={(e) => setNewProblem({...newProblem, title: e.target.value})}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm"
+                                                    />
+                                                </div>
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Difficulty</label>
+                                                    <select 
+                                                        value={newProblem.difficulty}
+                                                        onChange={(e) => setNewProblem({...newProblem, difficulty: e.target.value})}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none"
+                                                    >
+                                                        <option>Easy</option>
+                                                        <option>Medium</option>
+                                                        <option>Hard</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Problem Description (Markdown)</label>
+                                                <textarea 
                                                     required
-                                                    value={newProblem.title}
-                                                    onChange={(e) => setNewProblem({...newProblem, title: e.target.value})}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm"
-                                                />
+                                                    rows="6"
+                                                    value={newProblem.description}
+                                                    onChange={(e) => setNewProblem({...newProblem, description: e.target.value})}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500/50 outline-none transition-all resize-y font-mono"
+                                                    placeholder="Describe the problem, input/output format, and constraints..."
+                                                ></textarea>
                                             </div>
-                                            <div className="col-span-2 md:col-span-1">
-                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Difficulty</label>
-                                                <select 
-                                                    value={newProblem.difficulty}
-                                                    onChange={(e) => setNewProblem({...newProblem, difficulty: e.target.value})}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none"
-                                                >
-                                                    <option>Easy</option>
-                                                    <option>Medium</option>
-                                                    <option>Hard</option>
-                                                </select>
+
+                                            <div>
+                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Constraints (Markdown)</label>
+                                                <textarea 
+                                                    rows="3"
+                                                    value={newProblem.constraints}
+                                                    onChange={(e) => setNewProblem({...newProblem, constraints: e.target.value})}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500/50 outline-none transition-all resize-y font-mono"
+                                                    placeholder="e.g. 1 <= N <= 10^5"
+                                                ></textarea>
                                             </div>
-                                        </div>
 
-                                        <div>
-                                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Problem Description (Markdown)</label>
-                                            <textarea 
-                                                required
-                                                rows="6"
-                                                value={newProblem.description}
-                                                onChange={(e) => setNewProblem({...newProblem, description: e.target.value})}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500/50 outline-none transition-all resize-y font-mono"
-                                                placeholder="Describe the problem, input/output format, and constraints..."
-                                            ></textarea>
-                                        </div>
-
-                                        <div>
-                                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Test Cases</label>
                                             <div className="space-y-4">
-                                                {newProblem.testCases.map((tc, index) => (
-                                                    <div key={index} className="bg-black/20 p-4 rounded-2xl border border-white/5 relative group">
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="text-[9px] text-gray-600 block mb-1">Input</label>
-                                                                <textarea 
-                                                                    value={tc.input}
-                                                                    onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
-                                                                    className="w-full bg-black/30 border border-white/5 rounded-lg p-2 text-[11px] font-mono"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[9px] text-gray-600 block mb-1">Expected Output</label>
-                                                                <textarea 
-                                                                    value={tc.expectedOutput}
-                                                                    onChange={(e) => handleTestCaseChange(index, 'expectedOutput', e.target.value)}
-                                                                    className="w-full bg-black/30 border border-white/5 rounded-lg p-2 text-[11px] font-mono"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => removeTestCase(index)}
-                                                            className="absolute -top-2 -right-2 bg-red-500/20 text-red-400 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">Starter Code</label>
+                                                    <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+                                                        {['python', 'cpp', 'c'].map(lang => (
+                                                            <button
+                                                                key={lang}
+                                                                type="button"
+                                                                onClick={() => setActiveLang(lang)}
+                                                                className={`px-4 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${activeLang === lang ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-white'}`}
+                                                            >
+                                                                {lang === 'cpp' ? 'C++' : lang}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                ))}
-                                                <button 
-                                                    type="button" 
-                                                    onClick={addTestCase}
-                                                    className="w-full border-2 border-dashed border-white/5 hover:border-white/20 transition-all rounded-2xl py-3 text-xs text-gray-500 flex items-center justify-center gap-2"
-                                                >
-                                                    <Plus size={14} /> Add Test Case
-                                                </button>
+                                                </div>
+                                                <div className="h-[300px] border border-white/10 rounded-2xl overflow-hidden">
+                                                    <Editor
+                                                        height="100%"
+                                                        language={activeLang === 'cpp' ? 'cpp' : activeLang}
+                                                        theme="vs-dark"
+                                                        value={newProblem.starterCode[activeLang]}
+                                                        onChange={(value) => setNewProblem({
+                                                            ...newProblem,
+                                                            starterCode: { ...newProblem.starterCode, [activeLang]: value }
+                                                        })}
+                                                        options={{
+                                                            minimap: { enabled: false },
+                                                            fontSize: 14,
+                                                            padding: { top: 20 },
+                                                            scrollBeyondLastLine: false,
+                                                            automaticLayout: true
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <button 
-                                            type="submit"
-                                            disabled={loading}
-                                            className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black italic uppercase tracking-widest transition-all"
-                                        >
-                                            {loading ? 'Processing...' : 'Save Problem & Add to Assignment'}
-                                        </button>
-                                    </form>
+                                            <div>
+                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Test Cases</label>
+                                                <div className="space-y-4">
+                                                    {newProblem.testCases.map((tc, index) => (
+                                                        <div key={index} className="bg-black/20 p-4 rounded-2xl border border-white/5 relative group">
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <label className="text-[9px] text-gray-600 block mb-1">Input</label>
+                                                                    <textarea 
+                                                                        value={tc.input}
+                                                                        onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
+                                                                        className="w-full bg-black/30 border border-white/5 rounded-lg p-2 text-[11px] font-mono"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[9px] text-gray-600 block mb-1">Expected Output</label>
+                                                                    <textarea 
+                                                                        value={tc.expectedOutput}
+                                                                        onChange={(e) => handleTestCaseChange(index, 'expectedOutput', e.target.value)}
+                                                                        className="w-full bg-black/30 border border-white/5 rounded-lg p-2 text-[11px] font-mono"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => removeTestCase(index)}
+                                                                className="absolute -top-2 -right-2 bg-red-500/20 text-red-400 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={addTestCase}
+                                                        className="w-full border-2 border-dashed border-white/5 hover:border-white/20 transition-all rounded-2xl py-3 text-xs text-gray-500 flex items-center justify-center gap-2"
+                                                    >
+                                                        <Plus size={14} /> Add Test Case
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button 
+                                                type="submit"
+                                                disabled={loading}
+                                                className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black italic uppercase tracking-widest transition-all"
+                                            >
+                                                {loading ? 'Processing...' : 'Save Problem & Add to Assignment'}
+                                            </button>
+                                        </form>
+                                    </div>
                                 ) : (
                                     <div className="space-y-4">
                                         <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Questions in this Assignment</h3>
@@ -339,7 +471,6 @@ const AssignmentCreate = () => {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        {/* Preview Action? */}
                                                     </div>
                                                 ))}
                                             </div>
